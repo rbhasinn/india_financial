@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""
-Indian Financial Dashboard - Complete Working System
-Uses only FREE APIs - No paid subscriptions needed!
-"""
 
 import streamlit as st
 
 # COMMENTING OUT PAGE CONFIG TO AVOID ERROR
+# st.set_page_config(
+#     page_title="StockIQ India - Professional Financial Dashboard",
+#     page_icon="📈",
+#     layout="wide",
+#     initial_sidebar_state="expanded"
+# )
 
 import yfinance as yf
 import pandas as pd
@@ -26,6 +28,12 @@ import time
 DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
 
 # Page config
+st.set_page_config(
+    page_title="StockIQ India - Professional Financial Dashboard",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Custom CSS
 st.markdown("""
@@ -370,25 +378,101 @@ def get_stock_data(symbol, period='1mo'):
         return get_demo_stock_data(symbol, period)
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def get_news_sentiment(symbol):
-    """Get news - showing placeholder since we need API key for real news"""
+def get_news_sentiment(symbol, api_key=None):
+    """Get real news from NewsAPI"""
     try:
-        company_name = INDIAN_STOCKS.get(symbol, symbol).split('.')[0]
+        if not api_key:
+            return {
+                'news': [],
+                'average_sentiment': 0,
+                'sentiment_label': 'Add NewsAPI key in sidebar for real news'
+            }
         
-        # Note: For real news, you need NewsAPI key (free at newsapi.org)
-        # or use RSS feeds from Economic Times, Moneycontrol etc.
+        # Get company name without .NS suffix
+        company_name = INDIAN_STOCKS.get(symbol, symbol).replace('.NS', '')
         
-        return {
-            'news': [],
-            'average_sentiment': 0,
-            'sentiment_label': 'No real-time news data (API key required)'
+        # NewsAPI endpoint
+        url = 'https://newsapi.org/v2/everything'
+        
+        # Parameters for Indian financial news
+        params = {
+            'q': f'{company_name} OR "{company_name}" stock OR "{company_name}" share',
+            'apiKey': api_key,
+            'language': 'en',
+            'sortBy': 'publishedAt',
+            'pageSize': 10,
+            'domains': 'economictimes.indiatimes.com,moneycontrol.com,business-standard.com,livemint.com,reuters.com,bloomberg.com'
         }
         
+        response = requests.get(url, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            if data['status'] == 'ok' and data['totalResults'] > 0:
+                news_items = []
+                
+                for article in data['articles'][:5]:  # Top 5 articles
+                    # Simple sentiment analysis based on keywords
+                    title = article['title'] or ''
+                    description = article['description'] or ''
+                    content = title + ' ' + description
+                    
+                    # Basic sentiment scoring
+                    positive_words = ['gain', 'rise', 'grow', 'profit', 'beat', 'outperform', 'bullish', 'buy', 'upgrade', 'strong', 'record', 'high']
+                    negative_words = ['loss', 'fall', 'drop', 'miss', 'downgrade', 'bearish', 'sell', 'weak', 'low', 'concern', 'risk']
+                    
+                    positive_score = sum(1 for word in positive_words if word in content.lower())
+                    negative_score = sum(1 for word in negative_words if word in content.lower())
+                    
+                    # Calculate sentiment (-1 to 1)
+                    if positive_score + negative_score > 0:
+                        sentiment = (positive_score - negative_score) / (positive_score + negative_score)
+                    else:
+                        sentiment = 0
+                    
+                    news_items.append({
+                        'title': article['title'],
+                        'description': article['description'],
+                        'url': article['url'],
+                        'source': article['source']['name'],
+                        'publishedAt': datetime.fromisoformat(article['publishedAt'].replace('Z', '+00:00')),
+                        'sentiment': sentiment
+                    })
+                
+                # Calculate average sentiment
+                if news_items:
+                    avg_sentiment = sum(item['sentiment'] for item in news_items) / len(news_items)
+                    sentiment_label = 'Positive' if avg_sentiment > 0.2 else 'Negative' if avg_sentiment < -0.2 else 'Neutral'
+                else:
+                    avg_sentiment = 0
+                    sentiment_label = 'No news found'
+                
+                return {
+                    'news': news_items,
+                    'average_sentiment': avg_sentiment,
+                    'sentiment_label': sentiment_label
+                }
+            else:
+                return {
+                    'news': [],
+                    'average_sentiment': 0,
+                    'sentiment_label': f'No recent news for {company_name}'
+                }
+        else:
+            error_data = response.json()
+            error_msg = error_data.get('message', 'Unknown error')
+            return {
+                'news': [],
+                'average_sentiment': 0,
+                'sentiment_label': f'API Error: {error_msg}'
+            }
+            
     except Exception as e:
         return {
             'news': [],
             'average_sentiment': 0,
-            'sentiment_label': 'News unavailable'
+            'sentiment_label': f'Error: {str(e)}'
         }
 
 def calculate_technical_indicators(df):
@@ -474,9 +558,26 @@ def calculate_growth(series):
     except:
         return 0
 
-# Sidebar - User Authentication
+# Add API Key configuration in sidebar
 with st.sidebar:
     st.header("🔐 User Account")
+    
+    # API Configuration
+    with st.expander("🔑 API Configuration"):
+        news_api_key = st.text_input(
+            "NewsAPI Key", 
+            type="password",
+            value=st.session_state.get('news_api_key', ''),
+            help="Get your free API key at https://newsapi.org"
+        )
+        if st.button("Save API Key"):
+            st.session_state.news_api_key = news_api_key
+            st.success("API Key saved for this session!")
+        
+        if not st.session_state.get('news_api_key'):
+            st.warning("Add NewsAPI key for real news")
+        else:
+            st.success("NewsAPI configured ✓")
     
     if st.session_state.user is None:
         tab1, tab2 = st.tabs(["Login", "Sign Up"])
@@ -515,6 +616,23 @@ with st.sidebar:
 # Main App
 st.title("📈 StockIQ India - Professional Financial Dashboard")
 st.markdown("Real-time Indian stock market data, analysis, and portfolio management")
+
+# Important notice
+if not st.session_state.get('news_api_key'):
+    st.info("""
+    🔔 **Welcome to StockIQ India!** 
+    
+    **✅ Working Features (No API needed):**
+    - Real stock prices & charts
+    - Technical indicators (RSI, MACD, etc.)
+    - Portfolio tracking
+    - DCF Calculator with real financials
+    
+    **🔑 For News Feed:** Add your free NewsAPI key in the sidebar → API Configuration
+    """)
+
+# Add Demo Mode Toggle
+DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
 
 # Top metrics
 col1, col2, col3, col4 = st.columns(4)
@@ -682,24 +800,54 @@ with tab2:
         # News & Sentiment
         st.subheader("News & Sentiment Analysis")
         
-        news_data = get_news_sentiment(selected_stock)
+        # Get API key from session state
+        api_key = st.session_state.get('news_api_key')
+        news_data = get_news_sentiment(selected_stock, api_key)
         
+        # Sentiment overview
         col1, col2 = st.columns([1, 3])
         with col1:
-            st.markdown("### News Feed")
-            st.write("Status: " + news_data['sentiment_label'])
+            sentiment_color = "green" if news_data['average_sentiment'] > 0.2 else "red" if news_data['average_sentiment'] < -0.2 else "gray"
+            st.markdown(f"### Sentiment")
+            st.markdown(f"<h2 style='color: {sentiment_color}'>{news_data['sentiment_label']}</h2>", unsafe_allow_html=True)
+            if news_data['average_sentiment'] != 0:
+                st.metric("Sentiment Score", f"{news_data['average_sentiment']:.2f}")
         
         with col2:
-            st.info("""
-            📰 **Real-time news requires API key**
-            
-            To get live news:
-            1. Get free API key from [newsapi.org](https://newsapi.org)
-            2. Or use RSS feeds from Economic Times
-            3. Or scrape from Moneycontrol (carefully)
-            
-            For now, showing only real stock data from Yahoo Finance.
-            """)
+            if not api_key:
+                st.info("""
+                📰 **To see real news:**
+                1. Get your free API key at [newsapi.org](https://newsapi.org/register)
+                2. Add it in the sidebar under "API Configuration"
+                3. Real-time news will appear here!
+                
+                Free tier includes 100 requests/day.
+                """)
+            elif news_data['news']:
+                st.write(f"**Latest News for {INDIAN_STOCKS.get(selected_stock, selected_stock)}**")
+                
+                for news in news_data['news']:
+                    with st.container():
+                        # News title with link
+                        st.markdown(f"### [{news['title']}]({news['url']})")
+                        
+                        # Description
+                        if news['description']:
+                            st.write(news['description'])
+                        
+                        # Metadata
+                        col_a, col_b, col_c = st.columns([2, 2, 1])
+                        with col_a:
+                            st.caption(f"📰 {news['source']}")
+                        with col_b:
+                            st.caption(f"📅 {news['publishedAt'].strftime('%Y-%m-%d %H:%M')}")
+                        with col_c:
+                            sentiment_emoji = "😊" if news['sentiment'] > 0.2 else "😟" if news['sentiment'] < -0.2 else "😐"
+                            st.caption(f"{sentiment_emoji} {news['sentiment']:.2f}")
+                        
+                        st.divider()
+            else:
+                st.warning(news_data['sentiment_label'])
 
 # Tab 3: Portfolio Management
 with tab3:
