@@ -7,6 +7,12 @@ Uses only FREE APIs - No paid subscriptions needed!
 import streamlit as st
 
 # COMMENTING OUT PAGE CONFIG TO AVOID ERROR
+# st.set_page_config(
+#     page_title="StockIQ India - Professional Financial Dashboard",
+#     page_icon="📈",
+#     layout="wide",
+#     initial_sidebar_state="expanded"
+# )
 
 import yfinance as yf
 import pandas as pd
@@ -26,6 +32,12 @@ import time
 DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
 
 # Page config
+st.set_page_config(
+    page_title="StockIQ India - Professional Financial Dashboard",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Custom CSS
 st.markdown("""
@@ -162,19 +174,8 @@ def create_user(email, password):
         conn.close()
         return False
 
-# Indian stock symbols mapping - Start with fewer stocks to avoid rate limits
+# Indian stock symbols mapping - Full list
 INDIAN_STOCKS = {
-    'RELIANCE.NS': 'Reliance Industries',
-    'TCS.NS': 'Tata Consultancy Services',
-    'HDFCBANK.NS': 'HDFC Bank',
-    'INFY.NS': 'Infosys',
-    'ICICIBANK.NS': 'ICICI Bank',
-    '^NSEI': 'Nifty 50',
-    '^BSESN': 'Sensex'
-}
-
-# Full stock list - uncomment stocks as needed
-FULL_STOCK_LIST = {
     'RELIANCE.NS': 'Reliance Industries',
     'TCS.NS': 'Tata Consultancy Services',
     'HDFCBANK.NS': 'HDFC Bank',
@@ -195,6 +196,36 @@ FULL_STOCK_LIST = {
     'BAJFINANCE.NS': 'Bajaj Finance',
     'WIPRO.NS': 'Wipro',
     'NESTLEIND.NS': 'Nestle India',
+    'BAJAJFINSV.NS': 'Bajaj Finserv',
+    'TATAMOTORS.NS': 'Tata Motors',
+    'HCLTECH.NS': 'HCL Technologies',
+    'ADANIENT.NS': 'Adani Enterprises',
+    'ADANIPORTS.NS': 'Adani Ports',
+    'ONGC.NS': 'ONGC',
+    'NTPC.NS': 'NTPC',
+    'POWERGRID.NS': 'Power Grid',
+    'M&M.NS': 'Mahindra & Mahindra',
+    'TATASTEEL.NS': 'Tata Steel',
+    'JSWSTEEL.NS': 'JSW Steel',
+    'HINDALCO.NS': 'Hindalco',
+    'COALINDIA.NS': 'Coal India',
+    'BPCL.NS': 'BPCL',
+    'GRASIM.NS': 'Grasim Industries',
+    'HEROMOTOCO.NS': 'Hero MotoCorp',
+    'TECHM.NS': 'Tech Mahindra',
+    'DRREDDY.NS': 'Dr. Reddy\'s',
+    'DIVISLAB.NS': 'Divi\'s Labs',
+    'CIPLA.NS': 'Cipla',
+    'APOLLOHOSP.NS': 'Apollo Hospitals',
+    'EICHERMOT.NS': 'Eicher Motors',
+    'BRITANNIA.NS': 'Britannia',
+    'PIDILITIND.NS': 'Pidilite Industries',
+    'DABUR.NS': 'Dabur',
+    'GODREJCP.NS': 'Godrej Consumer',
+    'HAVELLS.NS': 'Havells',
+    'SIEMENS.NS': 'Siemens',
+    'AMBUJACEM.NS': 'Ambuja Cements',
+    'BOSCHLTD.NS': 'Bosch',
     '^NSEI': 'Nifty 50',
     '^BSESN': 'Sensex'
 }
@@ -352,58 +383,24 @@ def get_stock_data(symbol, period='1mo'):
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def get_news_sentiment(symbol):
-    """Get news and sentiment using free news APIs"""
+    """Get news - showing placeholder since we need API key for real news"""
     try:
-        # Using NewsAPI free tier (requires free API key)
-        # You can get one at https://newsapi.org/register
-        # For demo, using mock data
-        
         company_name = INDIAN_STOCKS.get(symbol, symbol).split('.')[0]
         
-        # In production, use actual NewsAPI:
-        # url = f"https://newsapi.org/v2/everything?q={company_name}&apiKey=YOUR_FREE_API_KEY"
-        # response = requests.get(url)
-        # news_data = response.json()
-        
-        # Mock news data for demo
-        news_items = [
-            {
-                'title': f'{company_name} reports strong Q3 earnings',
-                'description': 'Company beats analyst expectations with 15% revenue growth',
-                'sentiment': 0.8,
-                'source': 'Economic Times',
-                'publishedAt': datetime.now() - timedelta(hours=2)
-            },
-            {
-                'title': f'Analysts upgrade {company_name} stock',
-                'description': 'Major brokerages raise target price citing strong fundamentals',
-                'sentiment': 0.6,
-                'source': 'Moneycontrol',
-                'publishedAt': datetime.now() - timedelta(hours=5)
-            },
-            {
-                'title': f'{company_name} announces expansion plans',
-                'description': 'Company to invest Rs 5000 Cr in new manufacturing facility',
-                'sentiment': 0.7,
-                'source': 'Business Standard',
-                'publishedAt': datetime.now() - timedelta(days=1)
-            }
-        ]
-        
-        # Calculate average sentiment
-        avg_sentiment = sum(item['sentiment'] for item in news_items) / len(news_items)
+        # Note: For real news, you need NewsAPI key (free at newsapi.org)
+        # or use RSS feeds from Economic Times, Moneycontrol etc.
         
         return {
-            'news': news_items,
-            'average_sentiment': avg_sentiment,
-            'sentiment_label': 'Positive' if avg_sentiment > 0.5 else 'Negative' if avg_sentiment < -0.5 else 'Neutral'
+            'news': [],
+            'average_sentiment': 0,
+            'sentiment_label': 'No real-time news data (API key required)'
         }
         
     except Exception as e:
         return {
             'news': [],
             'average_sentiment': 0,
-            'sentiment_label': 'No data'
+            'sentiment_label': 'News unavailable'
         }
 
 def calculate_technical_indicators(df):
@@ -701,16 +698,20 @@ with tab2:
         
         col1, col2 = st.columns([1, 3])
         with col1:
-            sentiment_color = "green" if news_data['average_sentiment'] > 0.5 else "red" if news_data['average_sentiment'] < -0.5 else "gray"
-            st.markdown(f"### Sentiment: <span style='color: {sentiment_color}'>{news_data['sentiment_label']}</span>", unsafe_allow_html=True)
-            st.write(f"Score: {news_data['average_sentiment']:.2f}")
+            st.markdown("### News Feed")
+            st.write("Status: " + news_data['sentiment_label'])
         
         with col2:
-            for news in news_data['news'][:3]:
-                st.write(f"**{news['title']}**")
-                st.write(f"{news['description']}")
-                st.write(f"*{news['source']} - {news['publishedAt'].strftime('%Y-%m-%d %H:%M')}*")
-                st.write("---")
+            st.info("""
+            📰 **Real-time news requires API key**
+            
+            To get live news:
+            1. Get free API key from [newsapi.org](https://newsapi.org)
+            2. Or use RSS feeds from Economic Times
+            3. Or scrape from Moneycontrol (carefully)
+            
+            For now, showing only real stock data from Yahoo Finance.
+            """)
 
 # Tab 3: Portfolio Management
 with tab3:
@@ -1222,49 +1223,55 @@ with tab5:
 with tab6:
     st.header("AI-Powered Insights")
     
-    if stock_data:
+    if stock_data and len(stock_data['history']) > 0:
         st.subheader(f"Analysis for {stock_data['name']}")
         
-        # Generate insights based on data
+        # Generate insights based on REAL data
         col1, col2 = st.columns(2)
         
         with col1:
             st.write("**Technical Analysis Summary**")
             
-            # RSI Analysis
-            if 'dcf_result' not in st.session_state:
-                st.info("Run DCF calculator for valuation insights")
+            # Calculate real RSI
+            df_temp = calculate_technical_indicators(stock_data['history'])
+            latest_rsi = df_temp['RSI'].iloc[-1] if 'RSI' in df_temp.columns and not df_temp['RSI'].isna().all() else 50
+            
+            insights = []
+            
+            # RSI Analysis (REAL)
+            if latest_rsi > 70:
+                insights.append(f"⚠️ RSI at {latest_rsi:.1f} - Overbought conditions")
+            elif latest_rsi < 30:
+                insights.append(f"✅ RSI at {latest_rsi:.1f} - Oversold, potential buying opportunity")
             else:
-                latest_rsi = 50  # Default
-                if stock_data and len(stock_data['history']) > 14:
-                    df_temp = calculate_technical_indicators(stock_data['history'])
-                    latest_rsi = df_temp['RSI'].iloc[-1] if not df_temp['RSI'].isna().all() else 50
-                
-                insights = []
-                
-                if latest_rsi > 70:
-                    insights.append("⚠️ RSI indicates overbought conditions")
-                elif latest_rsi < 30:
-                    insights.append("✅ RSI indicates oversold conditions - potential buying opportunity")
-                else:
-                    insights.append("📊 RSI in neutral zone")
-                
-                # Price trend
-                if stock_data['change_percent'] > 2:
-                    insights.append("📈 Strong upward momentum today")
-                elif stock_data['change_percent'] < -2:
-                    insights.append("📉 Significant downward pressure")
-                
-                # Valuation
-                if 'dcf_result' in st.session_state:
-                    upside = ((st.session_state.dcf_result['fair_value'] - stock_data['current_price']) / stock_data['current_price']) * 100
-                    if upside > 20:
-                        insights.append("💎 DCF model suggests significant undervaluation")
-                    elif upside < -20:
-                        insights.append("⚡ DCF model indicates overvaluation")
-                
-                for insight in insights:
-                    st.write(insight)
+                insights.append(f"📊 RSI at {latest_rsi:.1f} - Neutral zone")
+            
+            # Price trend (REAL)
+            if stock_data['change_percent'] > 2:
+                insights.append(f"📈 Up {stock_data['change_percent']:.1f}% today - Strong momentum")
+            elif stock_data['change_percent'] < -2:
+                insights.append(f"📉 Down {abs(stock_data['change_percent']):.1f}% today - Selling pressure")
+            else:
+                insights.append(f"➡️ {stock_data['change_percent']:+.1f}% today - Sideways movement")
+            
+            # Volume analysis (REAL)
+            if stock_data['volume'] > 0:
+                avg_volume = stock_data['history']['Volume'].mean()
+                if stock_data['volume'] > avg_volume * 1.5:
+                    insights.append("🔥 High volume - Increased activity")
+                elif stock_data['volume'] < avg_volume * 0.5:
+                    insights.append("💤 Low volume - Reduced interest")
+            
+            # 52-week position (REAL)
+            if stock_data['52w_high'] > 0 and stock_data['52w_low'] > 0:
+                range_position = (stock_data['current_price'] - stock_data['52w_low']) / (stock_data['52w_high'] - stock_data['52w_low'])
+                if range_position > 0.8:
+                    insights.append("🎯 Near 52-week high")
+                elif range_position < 0.2:
+                    insights.append("🎯 Near 52-week low")
+            
+            for insight in insights:
+                st.write(insight)
         
         with col2:
             st.write("**Fundamental Analysis Summary**")
@@ -1273,42 +1280,77 @@ with tab6:
             
             fund_insights = []
             
-            if fundamentals.get('P/E Ratio', 0) > 0:
-                if fundamentals['P/E Ratio'] < 15:
-                    fund_insights.append("✅ Low P/E ratio - potentially undervalued")
-                elif fundamentals['P/E Ratio'] > 30:
-                    fund_insights.append("⚠️ High P/E ratio - growth priced in")
+            # P/E Analysis (REAL)
+            if stock_data['pe_ratio'] > 0:
+                if stock_data['pe_ratio'] < 15:
+                    fund_insights.append(f"✅ P/E Ratio: {stock_data['pe_ratio']:.1f} - Potentially undervalued")
+                elif stock_data['pe_ratio'] > 30:
+                    fund_insights.append(f"⚠️ P/E Ratio: {stock_data['pe_ratio']:.1f} - Premium valuation")
+                else:
+                    fund_insights.append(f"📊 P/E Ratio: {stock_data['pe_ratio']:.1f} - Fair valuation")
             
-            if fundamentals.get('ROE', 0) > 15:
-                fund_insights.append("💪 Strong ROE indicates efficient management")
+            # Market Cap (REAL)
+            if stock_data['market_cap'] > 0:
+                market_cap_cr = stock_data['market_cap'] / 10000000
+                if market_cap_cr > 100000:
+                    fund_insights.append(f"🏢 Large Cap - ₹{market_cap_cr:,.0f} Cr")
+                elif market_cap_cr > 20000:
+                    fund_insights.append(f"🏭 Mid Cap - ₹{market_cap_cr:,.0f} Cr")
+                else:
+                    fund_insights.append(f"🏪 Small Cap - ₹{market_cap_cr:,.0f} Cr")
             
-            if fundamentals.get('Debt to Equity', 0) < 0.5:
-                fund_insights.append("🛡️ Low debt levels - financially stable")
-            elif fundamentals.get('Debt to Equity', 0) > 1.5:
-                fund_insights.append("⚠️ High debt levels - monitor closely")
+            # Dividend Yield (REAL)
+            if stock_data['dividend_yield'] > 0:
+                fund_insights.append(f"💰 Dividend Yield: {stock_data['dividend_yield']*100:.2f}%")
             
-            for insight in fund_insights:
-                st.write(insight)
+            # Additional real metrics from fundamentals
+            if fundamentals:
+                if fundamentals.get('ROE', 0) > 15:
+                    fund_insights.append(f"💪 ROE: {fundamentals['ROE']:.1f}% - Efficient management")
+                if fundamentals.get('Debt to Equity', 0) > 0:
+                    if fundamentals['Debt to Equity'] < 0.5:
+                        fund_insights.append(f"🛡️ D/E: {fundamentals['Debt to Equity']:.2f} - Low debt")
+                    elif fundamentals['Debt to Equity'] > 1.5:
+                        fund_insights.append(f"⚠️ D/E: {fundamentals['Debt to Equity']:.2f} - High leverage")
+            
+            if fund_insights:
+                for insight in fund_insights:
+                    st.write(insight)
+            else:
+                st.write("Limited fundamental data available")
         
-        # AI Recommendation
-        st.subheader("AI Recommendation")
+        # AI Recommendation based on REAL data
+        st.subheader("Data-Driven Recommendation")
         
-        # Calculate overall score
+        # Calculate score based on real metrics
         score = 50  # Base score
         
-        # Technical factors
+        # Technical factors (REAL)
         if latest_rsi < 30:
-            score += 10
+            score += 15
         elif latest_rsi > 70:
+            score -= 15
+        
+        # Price momentum (REAL)
+        if stock_data['change_percent'] > 0:
+            score += 5
+        else:
+            score -= 5
+        
+        # Valuation (REAL)
+        if 0 < stock_data['pe_ratio'] < 20:
+            score += 10
+        elif stock_data['pe_ratio'] > 40:
             score -= 10
         
-        # Fundamental factors
-        if fundamentals.get('P/E Ratio', 25) < 20:
-            score += 10
-        if fundamentals.get('ROE', 0) > 15:
-            score += 10
+        # 52-week position (REAL)
+        if stock_data['current_price'] > 0 and stock_data['52w_high'] > 0:
+            if stock_data['current_price'] < stock_data['52w_low'] * 1.2:
+                score += 10  # Near lows
+            elif stock_data['current_price'] > stock_data['52w_high'] * 0.95:
+                score -= 5   # Near highs
         
-        # Valuation
+        # DCF valuation if available
         if 'dcf_result' in st.session_state:
             upside = ((st.session_state.dcf_result['fair_value'] - stock_data['current_price']) / stock_data['current_price']) * 100
             if upside > 20:
@@ -1316,19 +1358,32 @@ with tab6:
             elif upside < -20:
                 score -= 20
         
-        # Display recommendation
+        # Display recommendation with explanation
+        score = max(0, min(100, score))  # Keep between 0-100
+        
         if score >= 70:
-            st.success(f"🟢 STRONG BUY - Score: {score}/100")
-            st.write("The stock shows strong fundamentals, attractive valuation, and positive technical indicators.")
+            st.success(f"🟢 **BUY** - Score: {score}/100")
+            st.write("Positive technical and fundamental indicators suggest good entry point.")
         elif score >= 55:
-            st.info(f"🔵 BUY - Score: {score}/100")
-            st.write("The stock presents a good investment opportunity with favorable risk-reward ratio.")
+            st.info(f"🔵 **ACCUMULATE** - Score: {score}/100")
+            st.write("Mixed signals but leaning positive. Consider gradual accumulation.")
         elif score >= 45:
-            st.warning(f"🟡 HOLD - Score: {score}/100")
-            st.write("Mixed signals suggest waiting for better entry points or holding existing positions.")
+            st.warning(f"🟡 **HOLD** - Score: {score}/100")
+            st.write("Neutral outlook. Wait for clearer signals before taking action.")
         else:
-            st.error(f"🔴 SELL/AVOID - Score: {score}/100")
-            st.write("Multiple negative factors suggest avoiding or reducing exposure to this stock.")
+            st.error(f"🔴 **AVOID/REDUCE** - Score: {score}/100")
+            st.write("Multiple negative factors suggest caution.")
+        
+        # Show what's driving the score
+        with st.expander("Score Breakdown"):
+            st.write("**Factors considered:**")
+            st.write(f"• RSI Level: {latest_rsi:.1f}")
+            st.write(f"• Today's Change: {stock_data['change_percent']:+.1f}%")
+            st.write(f"• P/E Ratio: {stock_data['pe_ratio']:.1f}" if stock_data['pe_ratio'] > 0 else "• P/E Ratio: N/A")
+            st.write(f"• Current Price: ₹{stock_data['current_price']:.2f}")
+            st.write(f"• 52W Range: ₹{stock_data['52w_low']:.2f} - ₹{stock_data['52w_high']:.2f}")
+    else:
+        st.info("📊 Select a stock with available data to see AI insights")
 
 # Footer
 st.markdown("---")
