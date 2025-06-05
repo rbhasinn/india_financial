@@ -981,40 +981,22 @@ with tab2:
             st.info("No news found. Try another stock.")
         
         with col2:
-            if not api_key:
-                st.info("""
-                📰 **To see real news:**
-                1. Get your free API key at [newsapi.org](https://newsapi.org/register)
-                2. Add it in the sidebar under "API Configuration"
-                3. Real-time news will appear here!
-                
-                Free tier includes 100 requests/day.
-                """)
-            elif news_data['news']:
-                st.write(f"**Latest News for {INDIAN_STOCKS.get(selected_stock, selected_stock)}**")
-                
+            if news_data['news']:
                 for news in news_data['news']:
                     with st.container():
-                        # News title with link
                         st.markdown(f"### [{news['title']}]({news['url']})")
-                        
-                        # Description
                         if news['description']:
                             st.write(news['description'])
                         
-                        # Metadata
-                        col_a, col_b, col_c = st.columns([2, 2, 1])
+                        col_a, col_b = st.columns([3, 1])
                         with col_a:
                             st.caption(f"📰 {news['source']}")
                         with col_b:
-                            st.caption(f"📅 {news['publishedAt'].strftime('%Y-%m-%d %H:%M')}")
-                        with col_c:
-                            sentiment_emoji = "😊" if news['sentiment'] > 0.2 else "😟" if news['sentiment'] < -0.2 else "😐"
-                            st.caption(f"{sentiment_emoji} {news['sentiment']:.2f}")
-                        
+                            emoji = "📈" if news['sentiment'] > 0 else "📉" if news['sentiment'] < 0 else "➡️"
+                            st.caption(emoji)
                         st.divider()
             else:
-                st.warning(news_data['sentiment_label'])
+                st.info("No news found. Try another stock.")
 
 # Tab 3: Portfolio Management
 with tab3:
