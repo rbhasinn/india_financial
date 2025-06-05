@@ -48,10 +48,22 @@ st.markdown("""
         background-color: #0e0e0e;
     }
     
+    /* All text should be white by default */
+    .stApp p, .stApp span, .stApp div, .stApp label {
+        color: #ffffff !important;
+    }
+    
     /* Sidebar Styling */
     section[data-testid="stSidebar"] {
         background-color: #1a1a1a;
         border-right: 1px solid #333;
+    }
+    
+    section[data-testid="stSidebar"] p, 
+    section[data-testid="stSidebar"] span, 
+    section[data-testid="stSidebar"] div,
+    section[data-testid="stSidebar"] label {
+        color: #ffffff !important;
     }
     
     /* Headers */
@@ -69,32 +81,29 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
     
-    /* Metric Values */
-    div[data-testid="metric-container"] > div:nth-child(1) {
-        color: #888 !important;
+    /* Metric Labels */
+    div[data-testid="metric-container"] > label {
+        color: #aaaaaa !important;
         font-size: 14px !important;
         font-weight: 500 !important;
     }
     
-    div[data-testid="metric-container"] > div:nth-child(2) {
-        color: #fff !important;
+    /* Metric Values */
+    div[data-testid="metric-container"] > div[data-testid="stMetricValue"] {
+        color: #ffffff !important;
         font-size: 24px !important;
         font-weight: 700 !important;
     }
     
-    /* Positive/Negative Delta Colors */
-    div[data-testid="metric-container"] > div:nth-child(3) > div {
+    /* Metric Delta */
+    div[data-testid="metric-container"] div[data-testid="stMetricDelta"] > div {
         color: #4ade80 !important;
-    }
-    
-    div[data-testid="metric-container"] > div:nth-child(3) > div[data-testid="stMetricDelta"] > svg {
-        fill: #4ade80 !important;
     }
     
     /* Buttons */
     .stButton > button {
         background-color: #3b82f6;
-        color: white;
+        color: white !important;
         border: none;
         padding: 10px 24px;
         border-radius: 6px;
@@ -110,17 +119,29 @@ st.markdown("""
     
     /* Select boxes */
     .stSelectbox > div > div {
-        background-color: #1a1a1a;
-        border: 1px solid #333;
-        color: #fff;
+        background-color: #1a1a1a !important;
+        border: 1px solid #333 !important;
+    }
+    
+    .stSelectbox label {
+        color: #ffffff !important;
+    }
+    
+    .stSelectbox > div > div > div {
+        color: #ffffff !important;
     }
     
     /* Input fields */
     .stTextInput > div > div > input,
     .stNumberInput > div > div > input {
-        background-color: #1a1a1a;
-        border: 1px solid #333;
-        color: #fff;
+        background-color: #1a1a1a !important;
+        border: 1px solid #333 !important;
+        color: #ffffff !important;
+    }
+    
+    .stTextInput label,
+    .stNumberInput label {
+        color: #ffffff !important;
     }
     
     /* Tabs */
@@ -136,7 +157,7 @@ st.markdown("""
         white-space: pre-wrap;
         background-color: transparent;
         border-radius: 6px;
-        color: #888;
+        color: #ffffff !important;
         font-weight: 500;
         padding: 0 16px;
     }
@@ -151,38 +172,106 @@ st.markdown("""
         background-color: #1a1a1a;
         border: 1px solid #333;
         border-radius: 8px;
-        color: #fff;
+        color: #ffffff !important;
+    }
+    
+    .streamlit-expanderHeader p {
+        color: #ffffff !important;
     }
     
     /* DataFrames */
     .dataframe {
         background-color: #1a1a1a !important;
-        color: #fff !important;
         border: 1px solid #333 !important;
     }
     
-    .dataframe th {
-        background-color: #0e0e0e !important;
-        color: #888 !important;
+    .dataframe thead tr th {
+        background-color: #252525 !important;
+        color: #ffffff !important;
         font-weight: 600 !important;
         text-transform: uppercase;
         font-size: 12px !important;
         padding: 12px !important;
+        border-bottom: 2px solid #333 !important;
     }
     
-    .dataframe td {
+    .dataframe tbody tr td {
         background-color: #1a1a1a !important;
-        color: #fff !important;
+        color: #ffffff !important;
         padding: 10px !important;
         border-bottom: 1px solid #333 !important;
     }
     
-    /* Success/Error boxes */
+    /* Info, Warning, Error boxes */
     .stAlert {
         background-color: #1a1a1a;
         border: 1px solid #333;
-        color: #fff;
+        color: #ffffff !important;
         border-radius: 8px;
+    }
+    
+    .stAlert > div {
+        color: #ffffff !important;
+    }
+    
+    /* Checkbox */
+    .stCheckbox label {
+        color: #ffffff !important;
+    }
+    
+    /* Radio buttons */
+    .stRadio label {
+        color: #ffffff !important;
+    }
+    
+    .stRadio > div > label > div {
+        color: #ffffff !important;
+    }
+    
+    /* Slider */
+    .stSlider label {
+        color: #ffffff !important;
+    }
+    
+    .stSlider > div > div > div > div {
+        color: #ffffff !important;
+    }
+    
+    /* Download button */
+    .stDownloadButton > button {
+        background-color: #10b981;
+        color: white !important;
+        border: none;
+    }
+    
+    .stDownloadButton > button:hover {
+        background-color: #059669;
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div > div {
+        background-color: #3b82f6;
+    }
+    
+    /* Make sure all text in divs is white */
+    div {
+        color: #ffffff;
+    }
+    
+    /* Fix for any markdown text */
+    .stMarkdown, .stMarkdown p, .stMarkdown span {
+        color: #ffffff !important;
+    }
+    
+    /* Custom classes for specific colors */
+    .price-up {
+        color: #4ade80 !important;
+        font-weight: 700;
+    }
+    
+    .price-down {
+        color: #f87171 !important;
+        font-weight: 700;
     }
     
     /* Custom card styling */
@@ -193,17 +282,48 @@ st.markdown("""
         padding: 20px;
         margin-bottom: 20px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        color: #ffffff;
     }
     
-    /* Price indicators */
-    .price-up {
-        color: #4ade80 !important;
-        font-weight: 700;
+    .dashboard-card h5 {
+        color: #aaaaaa !important;
     }
     
-    .price-down {
-        color: #f87171 !important;
-        font-weight: 700;
+    .dashboard-card h3 {
+        color: #ffffff !important;
+    }
+    
+    .dashboard-card p {
+        color: #ffffff !important;
+    }
+    
+    /* Caption text */
+    .stCaption {
+        color: #aaaaaa !important;
+    }
+    
+    /* Make sure plotly charts have dark theme */
+    .js-plotly-plot {
+        background-color: #1a1a1a !important;
+    }
+    
+    /* Fix multiselect */
+    .stMultiSelect label {
+        color: #ffffff !important;
+    }
+    
+    .stMultiSelect > div > div {
+        background-color: #1a1a1a !important;
+        border: 1px solid #333 !important;
+    }
+    
+    .stMultiSelect > div > div > div {
+        color: #ffffff !important;
+    }
+    
+    /* Fix empty state text */
+    .stEmpty {
+        color: #ffffff !important;
     }
     
     /* Hide Streamlit branding */
