@@ -121,20 +121,6 @@ st.markdown("""
         color: #ffffff !important;
     }
     
-    /* Form labels specifically */
-    .stTextInput > label,
-    .stNumberInput > label,
-    .stSelectbox > label,
-    .stMultiSelect > label,
-    .stCheckbox > label,
-    .stRadio > label,
-    .stSlider > label {
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        font-size: 16px !important;
-        margin-bottom: 8px !important;
-    }
-    
     /* Buttons - More visible */
     .stButton > button {
         background-color: #3b82f6;
@@ -180,10 +166,21 @@ st.markdown("""
         padding: 10px !important;
     }
     
+    /* Ensure number input text is white */
+    .stNumberInput input[type="number"] {
+        color: #ffffff !important;
+        background-color: #2a2a2a !important;
+    }
+    
+    input::placeholder {
+        color: #999999 !important;
+    }
+    
     .stTextInput > div > div > input:focus,
     .stNumberInput > div > div > input:focus {
         border-color: #3b82f6 !important;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+        color: #ffffff !important;
     }
     
     .stTextInput label,
@@ -1489,69 +1486,83 @@ with tabs[2]:
 with tabs[3]:
     st.markdown("### 📰 Market News & Events")
     
-    # News for selected stock or market
-    news_stock = st.selectbox(
+    # News section with Google News RSS
+    selected_news_stock = st.selectbox(
         "Select stock for news",
-        options=['Market Overview'] + list(INDIAN_STOCKS.keys()),
-        format_func=lambda x: 'Market Overview' if x == 'Market Overview' else f"{INDIAN_STOCKS[x]['name']} ({x})"
+        options=list(INDIAN_STOCKS.keys()),
+        format_func=lambda x: f"{INDIAN_STOCKS[x]['name']} ({x})"
     )
     
-    try:
-        import feedparser
-        
-        if news_stock == 'Market Overview':
-            # General market news
-            rss_url = "https://news.google.com/rss/search?q=NSE+BSE+indian+stock+market&hl=en-IN&gl=IN&ceid=IN:en"
-        else:
-            # Specific stock news
-            company_name = INDIAN_STOCKS.get(news_stock, {}).get('name', news_stock)
-            rss_url = f"https://news.google.com/rss/search?q={company_name.replace(' ', '+')}+stock+NSE&hl=en-IN&gl=IN&ceid=IN:en"
-        
-        feed = feedparser.parse(rss_url)
-        
-        if feed.entries:
-            for idx, entry in enumerate(feed.entries[:15]):  # Show up to 15 news items
-                with st.container():
-                    col1, col2 = st.columns([5, 1])
-                    
-                    with col1:
-                        st.markdown(f"### [{entry.title}]({entry.link})")
-                        
-                        # Parse date if available
-                        if hasattr(entry, 'published'):
-                            st.caption(f"📅 {entry.published} • Google News")
-                        else:
-                            st.caption("📅 Recent • Google News")
-                        
-                        # Show summary if available
-                        if hasattr(entry, 'summary'):
-                            summary = entry.summary[:200] + "..." if len(entry.summary) > 200 else entry.summary
-                            st.write(summary)
-                    
-                    with col2:
-                        # Simple sentiment analysis based on title
-                        title_lower = entry.title.lower()
-                        positive_words = ['gain', 'rise', 'surge', 'rally', 'profit', 'up', 'high', 'positive', 'growth', 'beat']
-                        negative_words = ['fall', 'drop', 'loss', 'decline', 'crash', 'down', 'low', 'negative', 'cut', 'miss']
-                        
-                        pos_count = sum(1 for word in positive_words if word in title_lower)
-                        neg_count = sum(1 for word in negative_words if word in title_lower)
-                        
-                        if pos_count > neg_count:
-                            st.success("Positive")
-                        elif neg_count > pos_count:
-                            st.error("Negative")
-                        else:
-                            st.info("Neutral")
-                    
-                    st.divider()
-        else:
-            st.info("No recent news found. Try selecting a different stock.")
+    if selected_news_stock:
+        try:
+            import feedparser
             
-    except ImportError:
-        st.error("Please install feedparser: `pip install feedparser`")
-    except Exception as e:
-        st.error(f"Error fetching news: {str(e)}")
+            company_name = INDIAN_STOCKS.get(selected_news_stock, {}).get('name', selected_news_stock)
+            
+            # Google News RSS - FREE and WORKING
+            rss_url = f"https://news.google.com/rss/search?q={company_name.replace(' ', '+')}+stock+NSE&hl=en-IN&gl=IN&ceid=IN:en"
+            feed = feedparser.parse(rss_url)
+            
+            if feed.entries:
+                st.markdown(f"### Latest News for {company_name}")
+                
+                for idx, entry in enumerate(feed.entries[:10]):
+                    with st.container():
+                        col1, col2 = st.columns([5, 1])
+                        
+                        with col1:
+                            st.markdown(f"#### [{entry.title}]({entry.link})")
+                            
+                            # Parse published date
+                            if hasattr(entry, 'published'):
+                                st.caption(f"📅 {entry.published}")
+                            
+                            # Show summary if available
+                            if hasattr(entry, 'summary'):
+                                summary = entry.summary
+                                # Clean HTML tags if any
+                                import re
+                                clean_summary = re.sub('<.*?>', '', summary)
+                                st.write(clean_summary[:200] + "...")
+                        
+                        with col2:
+                            # Simple sentiment analysis
+                            title_lower = entry.title.lower()
+                            positive_words = ['gain', 'rise', 'surge', 'rally', 'profit', 'up', 'high', 'positive', 'growth']
+                            negative_words = ['fall', 'drop', 'loss', 'decline', 'crash', 'down', 'low', 'negative', 'cut']
+                            
+                            pos_count = sum(1 for word in positive_words if word in title_lower)
+                            neg_count = sum(1 for word in negative_words if word in title_lower)
+                            
+                            if pos_count > neg_count:
+                                st.success("📈 Positive")
+                            elif neg_count > pos_count:
+                                st.error("📉 Negative")
+                            else:
+                                st.info("➡️ Neutral")
+                        
+                        st.divider()
+            else:
+                st.info(f"No recent news found for {company_name}. Try another stock.")
+                
+        except ImportError:
+            st.error("Please install feedparser: `pip install feedparser`")
+        except Exception as e:
+            st.error(f"Error fetching news: {str(e)}")
+    
+    # Economic calendar
+    st.markdown("### 📅 Economic Calendar")
+    
+    events = [
+        {'Date': 'Today', 'Event': 'GDP Data Release', 'Impact': 'High', 'Time': '5:30 PM'},
+        {'Date': 'Tomorrow', 'Event': 'RBI Policy Meeting', 'Impact': 'High', 'Time': '10:00 AM'},
+        {'Date': 'Friday', 'Event': 'Weekly F&O Expiry', 'Impact': 'Medium', 'Time': '3:30 PM'},
+        {'Date': 'Monday', 'Event': 'IIP Data', 'Impact': 'Medium', 'Time': '5:30 PM'},
+        {'Date': 'Next Week', 'Event': 'Inflation Data (CPI)', 'Impact': 'High', 'Time': '5:30 PM'}
+    ]
+    
+    events_df = pd.DataFrame(events)
+    st.dataframe(events_df, use_container_width=True, hide_index=True)
 
 # Tab 5: AI Signals
 with tabs[4]:
