@@ -28,12 +28,6 @@ import time
 DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits", key="demo_mode_toggle")
 
 # Page config
-st.set_page_config(
-    page_title="StockIQ India - Professional Financial Dashboard",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Custom CSS
 st.markdown("""
