@@ -100,6 +100,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Demo Mode Toggle
+DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits", key="demo_mode_toggle")
 # Add Demo Mode Toggle AFTER page config
 # Initialize session state
 if 'user' not in st.session_state:
