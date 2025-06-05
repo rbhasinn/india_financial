@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
+"""
+Indian Financial Dashboard - Complete Working System
+Uses only FREE APIs - No paid subscriptions needed!
+"""
 
 import streamlit as st
 
 # COMMENTING OUT PAGE CONFIG TO AVOID ERROR
+# st.set_page_config(
+#     page_title="StockIQ India - Professional Financial Dashboard",
+#     page_icon="📈",
+#     layout="wide",
+#     initial_sidebar_state="expanded"
+# )
 
 import yfinance as yf
 import pandas as pd
@@ -19,8 +29,15 @@ import os
 import time
 
 # Add Demo Mode Toggle
+DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits", key="demo_mode_toggle")
 
 # Page config
+st.set_page_config(
+    page_title="StockIQ India - Professional Financial Dashboard",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Custom CSS
 st.markdown("""
@@ -295,7 +312,7 @@ def get_demo_stock_data(symbol, period='1mo'):
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_stock_data(symbol, period='1mo'):
     """Fetch stock data using yfinance (FREE) or demo data"""
-    if False:  # Demo mode disabled
+    if DEMO_MODE:
         return get_demo_stock_data(symbol, period)
     
     try:
@@ -378,17 +395,54 @@ def get_news_sentiment(symbol, api_key=None):
         # Get company name without .NS suffix
         company_name = INDIAN_STOCKS.get(symbol, symbol).replace('.NS', '')
         
+        # Special handling for common abbreviations
+        search_terms = {
+            'RELIANCE.NS': '"Reliance Industries" OR "RIL" stock',
+            'TCS.NS': '"Tata Consultancy" OR "TCS" share',
+            'INFY.NS': '"Infosys" INFY stock',
+            'HDFCBANK.NS': '"HDFC Bank" stock',
+            'ICICIBANK.NS': '"ICICI Bank" share',
+            'ITC.NS': '"ITC Limited" OR "ITC" share',
+            'SBIN.NS': '"State Bank" OR "SBI" stock',
+            'WIPRO.NS': '"Wipro" stock',
+            'HCLTECH.NS': '"HCL Tech" OR "HCLTECH" share',
+            'BAJFINANCE.NS': '"Bajaj Finance" stock',
+            'BHARTIARTL.NS': '"Bharti Airtel" OR "Airtel" stock',
+            'HINDUNILVR.NS': '"Hindustan Unilever" OR "HUL" stock',
+            'KOTAKBANK.NS': '"Kotak Bank" OR "Kotak Mahindra" stock',
+            'LT.NS': '"Larsen Toubro" OR "L&T" stock',
+            'MARUTI.NS': '"Maruti Suzuki" OR "Maruti" share',
+            'TATAMOTORS.NS': '"Tata Motors" stock',
+            'AXISBANK.NS': '"Axis Bank" share',
+            'SUNPHARMA.NS': '"Sun Pharma" OR "Sun Pharmaceutical" stock',
+            'ADANIENT.NS': '"Adani Enterprises" stock',
+            'ADANIPORTS.NS': '"Adani Ports" share',
+            'ASIANPAINT.NS': '"Asian Paints" stock',
+            'TITAN.NS': '"Titan Company" OR "Titan" share',
+            'ULTRACEMCO.NS': '"UltraTech Cement" stock',
+            'NESTLEIND.NS': '"Nestle India" share',
+            'ONGC.NS': '"ONGC" oil stock',
+            'NTPC.NS': '"NTPC" power stock',
+        }
+        
+        # Use specific search term or default format
+        if symbol in search_terms:
+            search_query = search_terms[symbol]
+        else:
+            # More specific search query
+            search_query = f'"{company_name}" AND (stock OR share OR NSE OR BSE OR results OR earnings)'
+        
         # NewsAPI endpoint
         url = 'https://newsapi.org/v2/everything'
         
         # Parameters for Indian financial news
         params = {
-            'q': f'{company_name} OR "{company_name}" stock OR "{company_name}" share',
+            'q': search_query,
             'apiKey': api_key,
             'language': 'en',
-            'sortBy': 'publishedAt',
-            'pageSize': 10,
-            'domains': 'economictimes.indiatimes.com,moneycontrol.com,business-standard.com,livemint.com,reuters.com,bloomberg.com'
+            'sortBy': 'relevancy',  # Changed from publishedAt to relevancy
+            'pageSize': 20,  # Get more to filter
+            'domains': 'economictimes.indiatimes.com,moneycontrol.com,business-standard.com,livemint.com,reuters.com,bloomberg.com,cnbctv18.com,financialexpress.com'
         }
         
         response = requests.get(url, params=params)
@@ -399,15 +453,54 @@ def get_news_sentiment(symbol, api_key=None):
             if data['status'] == 'ok' and data['totalResults'] > 0:
                 news_items = []
                 
-                for article in data['articles'][:5]:  # Top 5 articles
+                # Filter for relevant articles
+                for article in data['articles']:
+                    # Skip if title or description is None
+                    if not article.get('title') or not article.get('description'):
+                        continue
+                    
+                    title = article['title']
+                    description = article['description']
+                    
+                    # Check if article is actually about this company
+                    company_keywords = company_name.lower().split()
+                    title_lower = title.lower()
+                    desc_lower = description.lower()
+                    
+                    # More strict relevance check
+                    is_relevant = False
+                    
+                    # Check if company name or ticker is in title
+                    if any(keyword in title_lower for keyword in company_keywords):
+                        is_relevant = True
+                    
+                    # For common companies, check ticker symbols
+                    ticker_map = {
+                        'RELIANCE.NS': ['reliance', 'ril'],
+                        'TCS.NS': ['tcs', 'tata consultancy'],
+                        'INFY.NS': ['infosys', 'infy'],
+                        'HDFCBANK.NS': ['hdfc bank'],
+                        'ICICIBANK.NS': ['icici bank'],
+                        'WIPRO.NS': ['wipro'],
+                        'SBIN.NS': ['sbi', 'state bank'],
+                        'ITC.NS': ['itc'],
+                        'BHARTIARTL.NS': ['bharti', 'airtel'],
+                        'HCLTECH.NS': ['hcl tech', 'hcltech'],
+                    }
+                    
+                    if symbol in ticker_map:
+                        if any(ticker in title_lower for ticker in ticker_map[symbol]):
+                            is_relevant = True
+                    
+                    # Skip if not relevant
+                    if not is_relevant:
+                        continue
+                    
                     # Simple sentiment analysis based on keywords
-                    title = article['title'] or ''
-                    description = article['description'] or ''
                     content = title + ' ' + description
                     
-                    # Basic sentiment scoring
-                    positive_words = ['gain', 'rise', 'grow', 'profit', 'beat', 'outperform', 'bullish', 'buy', 'upgrade', 'strong', 'record', 'high']
-                    negative_words = ['loss', 'fall', 'drop', 'miss', 'downgrade', 'bearish', 'sell', 'weak', 'low', 'concern', 'risk']
+                    positive_words = ['gain', 'rise', 'grow', 'profit', 'beat', 'outperform', 'bullish', 'buy', 'upgrade', 'strong', 'record', 'high', 'surge', 'rally', 'positive']
+                    negative_words = ['loss', 'fall', 'drop', 'miss', 'downgrade', 'bearish', 'sell', 'weak', 'low', 'concern', 'risk', 'decline', 'negative', 'cut', 'warning']
                     
                     positive_score = sum(1 for word in positive_words if word in content.lower())
                     negative_score = sum(1 for word in negative_words if word in content.lower())
@@ -426,6 +519,10 @@ def get_news_sentiment(symbol, api_key=None):
                         'publishedAt': datetime.fromisoformat(article['publishedAt'].replace('Z', '+00:00')),
                         'sentiment': sentiment
                     })
+                    
+                    # Limit to 5 most relevant articles
+                    if len(news_items) >= 5:
+                        break
                 
                 # Calculate average sentiment
                 if news_items:
@@ -433,7 +530,7 @@ def get_news_sentiment(symbol, api_key=None):
                     sentiment_label = 'Positive' if avg_sentiment > 0.2 else 'Negative' if avg_sentiment < -0.2 else 'Neutral'
                 else:
                     avg_sentiment = 0
-                    sentiment_label = 'No news found'
+                    sentiment_label = f'No specific news found for {company_name}'
                 
                 return {
                     'news': news_items,
@@ -619,6 +716,7 @@ if not st.session_state.get('news_api_key'):
     """)
 
 # Add Demo Mode Toggle
+DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
 
 # Top metrics
 col1, col2, col3, col4 = st.columns(4)
