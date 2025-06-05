@@ -220,7 +220,7 @@ INDIAN_STOCKS = {
     '^BSESN': 'Sensex'
 }
 
-    """Calculate technical indicators"""
+"""Calculate technical indicators"""
     # Simple Moving Averages
     df['SMA_20'] = df['Close'].rolling(window=20).mean()
     df['SMA_50'] = df['Close'].rolling(window=50).mean()
