@@ -19,7 +19,6 @@ import os
 import time
 
 # Add Demo Mode Toggle
-DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
 
 # Page config
 
@@ -296,7 +295,7 @@ def get_demo_stock_data(symbol, period='1mo'):
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_stock_data(symbol, period='1mo'):
     """Fetch stock data using yfinance (FREE) or demo data"""
-    if DEMO_MODE:
+    if False:  # Demo mode disabled
         return get_demo_stock_data(symbol, period)
     
     try:
@@ -620,7 +619,6 @@ if not st.session_state.get('news_api_key'):
     """)
 
 # Add Demo Mode Toggle
-DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
 
 # Top metrics
 col1, col2, col3, col4 = st.columns(4)
