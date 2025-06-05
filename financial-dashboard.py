@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""
-Indian Financial Dashboard - Complete Working System
-Uses only FREE APIs - No paid subscriptions needed!
-"""
 
 import streamlit as st
 
 # COMMENTING OUT PAGE CONFIG TO AVOID ERROR
+# st.set_page_config(
+#     page_title="StockIQ India - Professional Financial Dashboard",
+#     page_icon="📈",
+#     layout="wide",
+#     initial_sidebar_state="expanded"
+# )
 
 import yfinance as yf
 import pandas as pd
@@ -26,6 +28,12 @@ import time
 DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits", key="demo_mode_toggle")
 
 # Page config
+st.set_page_config(
+    page_title="StockIQ India - Professional Financial Dashboard",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Custom CSS
 st.markdown("""
@@ -300,7 +308,7 @@ def get_demo_stock_data(symbol, period='1mo'):
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_stock_data(symbol, period='1mo'):
     """Fetch stock data using yfinance (FREE) or demo data"""
-    if False:  # Demo mode disabled
+    if DEMO_MODE:
         return get_demo_stock_data(symbol, period)
     
     try:
@@ -369,9 +377,115 @@ def get_stock_data(symbol, period='1mo'):
         # Fallback to demo data on error
         return get_demo_stock_data(symbol, period)
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data(ttl=1800)  # Cache for 30 minutes
+def get_news_from_rss(symbol):
+    """Get news from RSS feeds - NO API KEY NEEDED!"""
+    try:
+        company_name = INDIAN_STOCKS.get(symbol, symbol).replace('.NS', '')
+        
+        # RSS feeds that don't need API keys
+        rss_feeds = {
+            'moneycontrol': f'https://www.moneycontrol.com/rss/MCtopnews.xml',
+            'economic_times': f'https://economictimes.indiatimes.com/markets/stocks/rssfeeds/2146842.cms',
+            'business_standard': f'https://www.business-standard.com/rss/markets-106.rss'
+        }
+        
+        all_news = []
+        
+        # Try to get news from RSS feeds
+        for source, feed_url in rss_feeds.items():
+            try:
+                import feedparser
+                feed = feedparser.parse(feed_url)
+                
+                for entry in feed.entries[:10]:  # Get last 10 entries
+                    # Check if company name is mentioned
+                    if company_name.lower() in entry.title.lower() or company_name.lower() in entry.get('summary', '').lower():
+                        all_news.append({
+                            'title': entry.title,
+                            'description': entry.get('summary', '')[:200] + '...',
+                            'url': entry.link,
+                            'source': source.replace('_', ' ').title(),
+                            'publishedAt': datetime.now() - timedelta(hours=1),  # Approximate
+                            'sentiment': 0  # Neutral by default
+                        })
+            except:
+                continue
+        
+        # If no RSS results, show placeholder
+        if not all_news:
+            all_news = [{
+                'title': f'Enable NewsAPI for real-time {company_name} news',
+                'description': 'Add your free NewsAPI key in sidebar for latest news and sentiment analysis',
+                'url': 'https://newsapi.org',
+                'source': 'System',
+                'publishedAt': datetime.now(),
+                'sentiment': 0
+            }]
+        
+        return {
+            'news': all_news[:5],  # Limit to 5 news items
+            'average_sentiment': 0,
+            'sentiment_label': 'RSS Feed (Limited)'
+        }
+        
+    except Exception as e:
+        return {
+            'news': [],
+            'average_sentiment': 0,
+            'sentiment_label': 'News unavailable'
+        }
+
+@st.cache_data(ttl=1800)  # Cache for 30 minutes
 def get_news_sentiment(symbol, api_key=None):
-    """Get real news from NewsAPI"""
+    """Get news from Google News RSS - FREE, no API needed"""
+    try:
+        import feedparser
+        
+        # Get company name
+        company_name = INDIAN_STOCKS.get(symbol, symbol).replace('.NS', '')
+        
+        # Google News RSS URL - completely free
+        rss_url = f"https://news.google.com/rss/search?q={company_name.replace(' ', '+')}+stock+NSE+india&hl=en-IN&gl=IN&ceid=IN:en"
+        
+        # Parse the RSS feed
+        feed = feedparser.parse(rss_url)
+        
+        news_items = []
+        for entry in feed.entries[:5]:  # Get top 5 news
+            # Basic sentiment from title
+            title = entry.title
+            positive_words = ['gain', 'rise', 'high', 'profit', 'grow']
+            negative_words = ['fall', 'loss', 'low', 'drop', 'decline']
+            
+            pos = sum(1 for word in positive_words if word in title.lower())
+            neg = sum(1 for word in negative_words if word in title.lower())
+            
+            sentiment = (pos - neg) / max(pos + neg, 1)
+            
+            news_items.append({
+                'title': entry.title,
+                'description': entry.get('summary', '')[:200] + '...',
+                'url': entry.link,
+                'source': 'Google News',
+                'publishedAt': datetime.now(),
+                'sentiment': sentiment
+            })
+        
+        avg_sentiment = sum(item['sentiment'] for item in news_items) / len(news_items) if news_items else 0
+        
+        return {
+            'news': news_items,
+            'average_sentiment': avg_sentiment,
+            'sentiment_label': 'Positive' if avg_sentiment > 0.2 else 'Negative' if avg_sentiment < -0.2 else 'Neutral'
+        }
+        
+    except Exception as e:
+        return {
+            'news': [],
+            'average_sentiment': 0,
+            'sentiment_label': 'Install feedparser: pip install feedparser'
+        }
     try:
         if not api_key:
             return {
@@ -704,7 +818,7 @@ if not st.session_state.get('news_api_key'):
     """)
 
 # Add Demo Mode Toggle
-DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits", key="demo_mode_unique")
+DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
 
 # Top metrics
 col1, col2, col3, col4 = st.columns(4)
@@ -872,18 +986,26 @@ with tab2:
         # News & Sentiment
         st.subheader("News & Sentiment Analysis")
         
-        # Get API key from session state
-        api_key = st.session_state.get('news_api_key')
-        news_data = get_news_sentiment(selected_stock, api_key)
+        # Get news - no API key needed!
+        news_data = get_news_sentiment(selected_stock)
         
-        # Sentiment overview
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            sentiment_color = "green" if news_data['average_sentiment'] > 0.2 else "red" if news_data['average_sentiment'] < -0.2 else "gray"
-            st.markdown(f"### Sentiment")
-            st.markdown(f"<h2 style='color: {sentiment_color}'>{news_data['sentiment_label']}</h2>", unsafe_allow_html=True)
-            if news_data['average_sentiment'] != 0:
-                st.metric("Sentiment Score", f"{news_data['average_sentiment']:.2f}")
+        # Display news
+        if news_data['news']:
+            for news in news_data['news']:
+                with st.container():
+                    st.markdown(f"### [{news['title']}]({news['url']})")
+                    if news['description']:
+                        st.write(news['description'])
+                    
+                    col_a, col_b = st.columns([3, 1])
+                    with col_a:
+                        st.caption(f"📰 {news['source']}")
+                    with col_b:
+                        emoji = "📈" if news['sentiment'] > 0 else "📉" if news['sentiment'] < 0 else "➡️"
+                        st.caption(emoji)
+                    st.divider()
+        else:
+            st.info("No news found. Try another stock.")
         
         with col2:
             if not api_key:
