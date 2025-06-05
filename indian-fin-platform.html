@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanceIQ India - Professional Financial Intelligence Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a8a;
+            --primary-dark: #1e293b;
+            --secondary: #f97316;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #eab308;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --light: #f1f5f9;
+            --white: #ffffff;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8fafc;
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        .animate-fade {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--secondary) 0%, #fb923c 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            transition: left 0.3s;
+        }
+
+        .nav-link:hover:before {
+            left: 0;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .notification-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--danger);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* Main Layout */
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 2rem;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .search-card, .watchlist-card, .market-overview-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .search-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+
+        .company-list {
+            margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .company-item {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--light);
+        }
+
+        .company-item:hover {
+            background: #e2e8f0;
+            transform: translateX(4px);
+        }
+
+        .company-item.active {
+            background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+            color: white;
+        }
+
+        .company-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .company-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .company-symbol {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .company-change {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Market Overview */
+        .market-indices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .index-card {
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .index-card:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow);
+        }
+
+        .index-name {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-bottom: 0.25rem;
+        }
+
+        .index-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .index-change {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .content-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1.5rem;
+        }
+
+        .stock-info h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+
+        .stock-meta {
+            display: flex;
+            gap: 2rem;
+            color: var(--gray);
+        }
+
+        .stock-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .price-section {
+            text-align: right;
+        }
+
+        .current-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .price-change-info {
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* AI Insights */
+        .ai-insights {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 2rem;
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .ai-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .ai-content {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+
+        .insight-bullet {
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            margin-top: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 2rem;
+            display: flex;
+            gap: 2rem;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 1rem 0;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--gray);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .tab-content {
+            padding: 2rem;
+            min-height: 600px;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+        }
+
+        .metric-label {
+            color: var(--gray);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .metric-trend {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        /* Advanced DCF */
+        .dcf-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .dcf-panel {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .dcf-panel h3 {
+            margin-bottom: 1.5rem;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .sensitivity-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .sensitivity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .valuation-result {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            border: 2px solid #86efac;
+        }
+
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 0.5rem 0;
+        }
+
+        .result-comparison {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #86efac;
+        }
+
+        /* Chart Container */
+        .chart-wrapper {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chart-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .chart-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Financial Table */
+        .financial-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        .financial-table th {
+            background: #f8fafc;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary-dark);
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .financial-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .financial-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .table-highlight {
+            background: #fef3c7;
+            font-weight: 600;
+        }
+
+        /* Reports Section */
+        .reports-container {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .report-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .report-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .report-details {
+            flex: 1;
+            margin-left: 1rem;
+        }
+
+        .report-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+
+        .report-meta {
+            display: flex;
+            gap: 1rem;
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .report-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .report-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* AI Analysis Panel */
+        .ai-analysis-panel {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 2px solid #fbbf24;
+        }
+
+        .ai-analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-score {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .score-circle {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            box-shadow: var(--shadow);
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .ai-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .ai-metric {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* Loading States */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 1rem;
+            }
+            
+            .dcf-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                display: none;
+            }
+            
+            .stock-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .price-section {
+                text-align: left;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .tabs-container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">📈</div>
+                <span>FinanceIQ India</span>
+            </div>
+            <nav class="nav">
+                <a href="#dashboard" class="nav-link">Dashboard</a>
+                <a href="#screener" class="nav-link">Smart Screener</a>
+                <a href="#portfolio" class="nav-link">Portfolio</a>
+                <a href="#research" class="nav-link">AI Research</a>
+                <a href="#alerts" class="nav-link">Alerts</a>
+            </nav>
+            <div class="user-menu">
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="action-btn secondary">
+                    <span>👤</span>
+                    <span>Profile</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Search Card -->
+            <div class="search-card">
+                <div class="card-header">
+                    <h3 class="card-title">Smart Search</h3>
+                    <span style="color: var(--success); font-size: 0.85rem;">● Live</span>
+                </div>
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        placeholder="Search stocks, sectors..."
+                        id="stockSearch"
+                    >
+                </div>
+                <div class="company-list" id="companyList">
+                    <div class="company-item active" data-symbol="RELIANCE">
+                        <div class="company-info">
+                            <div class="company-name">Reliance Industries</div>
+                            <div class="company-symbol">NSE: RELIANCE</div>
+                        </div>
+                        <div class="company-change positive">+1.2%</div>
+                    </div>
+                    <div class="company-item" data-symbol="TCS">
+                        <div class="company-info">
+                            <div class="company-name">Tata Consultancy Services</div>
+                            <div class="company-symbol">NSE: TCS</div>
+                        </div>
+                        <div class="company-change negative">-0.8%</div>
+                    </div>
+                    <div class="company-item" data-symbol="HDFCBANK">
+                        <div class="company-info">
+                            <div class="company-name">HDFC Bank</div>
+                            <div class="company-symbol">NSE: HDFCBANK</div>
+                        </div>
+                        <div class="company-change positive">+2.1%</div>
+                    </div>
+                    <div class="company-item" data-symbol="INFY">
+                        <div class="company-info">
+                            <div class="company-name">Infosys</div>
+                            <div class="company-symbol">NSE: INFY</div>
+                        </div>
+                        <div class="company-change positive">+0.5%</div>
+                    </div>
+                    <div class="company-item" data-symbol="ICICIBANK">
+                        <div class="company-info">
+                            <div class="company-name">ICICI Bank</div>
+                            <div class="company-symbol">NSE: ICICIBANK</div>
+                        </div>
+                        <div class="company-change negative">-0.3%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Overview -->
+            <div class="market-overview-card">
+                <div class="card-header">
+                    <h3 class="card-title">Market Pulse</h3>
+                </div>
+                <div class="market-indices">
+                    <div class="index-card">
+                        <div class="index-name">NIFTY 50</div>
+                        <div class="index-value">22,147</div>
+                        <div class="index-change positive">+0.85%</div>
+                    </div>
+                    <div class="index-card">
+                        <div class="index-name">SENSEX</div>
+                        <div class="index-value">73,142</div>
+                        <div class="index-change positive">+0.92%</div>
+                    </div>
+                    <div class="index-card">
+                        <div class="index-name">BANK NIFTY</div>
+                        <div class="index-value">48,652</div>
+                        <div class="index-change negative">-0.45%</div>
+                    </div>
+                    <div class="index-card">
+                        <div class="index-name">MIDCAP</div>
+                        <div class="index-value">41,235</div>
+                        <div class="index-change positive">+1.23%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Watchlist -->
+            <div class="watchlist-card">
+                <div class="card-header">
+                    <h3 class="card-title">My Watchlist</h3>
+                    <button style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">➕</button>
+                </div>
+                <div style="display: grid; gap: 0.5rem;">
+                    <div class="company-item" style="background: white; border: 1px solid #e2e8f0;">
+                        <div class="company-info">
+                            <div class="company-name">Asian Paints</div>
+                            <div class="company-symbol">₹3,142.50</div>
+                        </div>
+                        <div class="company-change positive">+3.2%</div>
+                    </div>
+                    <div class="company-item" style="background: white; border: 1px solid #e2e8f0;">
+                        <div class="company-info">
+                            <div class="company-name">Wipro</div>
+                            <div class="company-symbol">₹485.30</div>
+                        </div>
+                        <div class="company-change negative">-1.5%</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Content Header -->
+            <div class="content-header">
+                <div class="stock-header">
+                    <div class="stock-info">
+                        <h1>Reliance Industries Limited</h1>
+                        <div class="stock-meta">
+                            <div class="stock-meta-item">
+                                <span>🏢</span>
+                                <span>Oil & Gas / Retail / Telecom</span>
+                            </div>
+                            <div class="stock-meta-item">
+                                <span>📍</span>
+                                <span>NSE: RELIANCE | BSE: 500325</span>
+                            </div>
+                            <div class="stock-meta-item">
+                                <span>💰</span>
+                                <span>Market Cap: ₹19.24 Trillion</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="price-section">
+                        <div class="current-price">₹2,842.50</div>
+                        <div class="price-change-info">
+                            <span class="positive">▲ ₹28.30 (+1.01%)</span>
+                            <span style="color: var(--gray); font-size: 0.9rem;">Today</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="action-btn primary">
+                        <span>📊</span>
+                        <span>Generate Report</span>
+                    </button>
+                    <button class="action-btn primary">
+                        <span>🤖</span>
+                        <span>AI Analysis</span>
+                    </button>
+                    <button class="action-btn secondary">
+                        <span>⭐</span>
+                        <span>Add to Watchlist</span>
+                    </button>
+                    <button class="action-btn secondary">
+                        <span>🔔</span>
+                        <span>Set Alert</span>
+                    </button>
+                </div>
+
+                <!-- AI Insights -->
+                <div class="ai-insights animate-fade">
+                    <div class="ai-header">
+                        <div class="ai-icon">🧠</div>
+                        <div>
+                            <div class="ai-title">AI-Powered Insights</div>
+                            <div style="font-size: 0.85rem; color: var(--gray);">Last updated: 2 minutes ago</div>
+                        </div>
+                    </div>
+                    <div class="ai-content">
+                        <div class="insight-item">
+                            <div class="insight-bullet"></div>
+                            <div><strong>Earnings Beat:</strong> Q3 results exceeded consensus by 8%, driven by robust retail growth of 19% YoY and Jio's ARPU expansion to ₹182</div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-bullet"></div>
+                            <div><strong>Green Energy Pivot:</strong> ₹75,000 crore committed to renewable energy with 4 Giga factories under construction - potential game changer</div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-bullet"></div>
+                            <div><strong>Technical Breakout:</strong> Stock broke above 200-DMA with volume surge, indicating bullish momentum. Next resistance at ₹2,950</div>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-bullet"></div>
+                            <div><strong>Risk Alert:</strong> O2C margins under pressure from global crude volatility; monitor Singapore GRM spreads closely</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs-container">
+                <button class="tab active" data-tab="overview">Overview</button>
+                <button class="tab" data-tab="ai-analysis">AI Analysis</button>
+                <button class="tab" data-tab="financials">Financials</button>
+                <button class="tab" data-tab="valuation">Smart Valuation</button>
+                <button class="tab" data-tab="reports">Reports Hub</button>
+                <button class="tab" data-tab="technicals">Technicals</button>
+                <button class="tab" data-tab="news">News & Sentiment</button>
+                <button class="tab" data-tab="peer">Peer Analysis</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Overview Tab -->
+                <div id="overview" class="tab-panel active">
+                    <!-- Key Metrics -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon">💹</div>
+                            <div class="metric-label">P/E Ratio</div>
+                            <div class="metric-value">27.8</div>
+                            <div class="metric-trend positive">▲ vs Industry: 22.5</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">📊</div>
+                            <div class="metric-label">P/B Ratio</div>
+                            <div class="metric-value">2.9</div>
+                            <div class="metric-trend">10Y Avg: 2.5</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">💰</div>
+                            <div class="metric-label">Dividend Yield</div>
+                            <div class="metric-value">0.35%</div>
+                            <div class="metric-trend">₹10/share</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">📈</div>
+                            <div class="metric-label">ROE</div>
+                            <div class="metric-value">11.2%</div>
+                            <div class="metric-trend negative">▼ YoY: -1.5%</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">🏦</div>
+                            <div class="metric-label">Debt/Equity</div>
+                            <div class="metric-value">0.54</div>
+                            <div class="metric-trend positive">▼ Improving</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">💵</div>
+                            <div class="metric-label">EPS (TTM)</div>
+                            <div class="metric-value">₹102.3</div>
+                            <div class="metric-trend positive">▲ +8.5% YoY</div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Chart -->
+                    <div class="chart-wrapper">
+                        <div class="chart-header">
+                            <h3>Price Performance</h3>
+                            <div class="chart-controls">
+                                <button class="chart-btn">1D</button>
+                                <button class="chart-btn">1W</button>
+                                <button class="chart-btn active">1M</button>
+                                <button class="chart-btn">3M</button>
+                                <button class="chart-btn">1Y</button>
+                                <button class="chart-btn">5Y</button>
+                            </div>
+                        </div>
+                        <div style="height: 300px; display: flex; align-items: center; justify-content: center; color: var(--gray);">
+                            <canvas id="priceChart" style="max-width: 100%; height: 100%;"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Business Segments -->
+                    <div style="margin-top: 2rem;">
+                        <h3 style="margin-bottom: 1.5rem;">Business Segments Performance</h3>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-icon">⛽</div>
+                                <div class="metric-label">O2C Business</div>
+                                <div class="metric-value">42%</div>
+                                <div class="metric-trend">Revenue Share</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">🛒</div>
+                                <div class="metric-label">Retail</div>
+                                <div class="metric-value">28%</div>
+                                <div class="metric-trend positive">▲ Growing Fast</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">📱</div>
+                                <div class="metric-label">Jio Platforms</div>
+                                <div class="metric-value">23%</div>
+                                <div class="metric-trend positive">▲ 450M+ Users</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">🌿</div>
+                                <div class="metric-label">New Energy</div>
+                                <div class="metric-value">7%</div>
+                                <div class="metric-trend">Future Growth</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Analysis Tab -->
+                <div id="ai-analysis" class="tab-panel" style="display: none;">
+                    <div class="ai-analysis-panel">
+                        <div class="ai-analysis-header">
+                            <div>
+                                <h3 style="margin-bottom: 0.5rem;">Comprehensive AI Analysis</h3>
+                                <p style="color: var(--gray);">Powered by Advanced ML Models & Real-time Data</p>
+                            </div>
+                            <div class="ai-score">
+                                <div class="score-circle">85</div>
+                                <div>
+                                    <div style="font-weight: 600;">AI Score</div>
+                                    <div class="score-label">Strong Buy</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="ai-metrics">
+                            <div class="ai-metric">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📈</div>
+                                <div style="font-weight: 600;">Growth Score</div>
+                                <div style="font-size: 1.5rem; color: var(--primary);">9.2/10</div>
+                            </div>
+                            <div class="ai-metric">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">💪</div>
+                                <div style="font-weight: 600;">Financial Health</div>
+                                <div style="font-size: 1.5rem; color: var(--primary);">8.5/10</div>
+                            </div>
+                            <div class="ai-metric">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+                                <div style="font-weight: 600;">Fair Value</div>
+                                <div style="font-size: 1.5rem; color: var(--primary);">₹3,150</div>
+                            </div>
+                            <div class="ai-metric">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                                <div style="font-weight: 600;">Risk Level</div>
+                                <div style="font-size: 1.5rem; color: var(--warning);">Medium</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem;">
+                        <h3 style="margin-bottom: 1.5rem;">AI-Generated Investment Thesis</h3>
+                        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; line-height: 1.8;">
+                            <h4 style="color: var(--primary); margin-bottom: 1rem;">Bull Case 🐂</h4>
+                            <ul style="margin-left: 1.5rem; margin-bottom: 1.5rem;">
+                                <li>Digital transformation through Jio ecosystem creating unprecedented synergies</li>
+                                <li>Retail expansion with 3,000+ stores planned, targeting tier 2/3 cities</li>
+                                <li>Green energy investments positioning for future energy transition</li>
+                                <li>Strong free cash flow generation enabling deleveraging</li>
+                            </ul>
+                            
+                            <h4 style="color: var(--danger); margin-bottom: 1rem;">Bear Case 🐻</h4>
+                            <ul style="margin-left: 1.5rem; margin-bottom: 1.5rem;">
+                                <li>O2C margins vulnerable to global crude price volatility</li>
+                                <li>Intense competition in telecom with potential ARPU pressure</li>
+                                <li>High capex requirements for new energy business</li>
+                                <li>Regulatory risks in multiple business segments</li>
+                            </ul>
+                            
+                            <h4 style="color: var(--primary-dark); margin-bottom: 1rem;">AI Recommendation</h4>
+                            <p>Based on comprehensive analysis of financials, market position, and growth prospects, Reliance presents a <strong>compelling investment opportunity</strong> for long-term investors. The company's diversified business model provides resilience, while strategic investments in digital and green energy offer significant upside potential. Current valuation appears reasonable considering the growth trajectory. Suggested allocation: 5-8% of portfolio for risk-balanced investors.</p>
+                        </div>
+                    </div>
+
+                    <!-- Sentiment Analysis -->
+                    <div style="margin-top: 2rem;">
+                        <h3 style="margin-bottom: 1.5rem;">Market Sentiment Analysis</h3>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">News Sentiment</div>
+                                <div class="metric-value positive">78%</div>
+                                <div class="metric-trend">Positive</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Analyst Rating</div>
+                                <div class="metric-value">4.2/5</div>
+                                <div class="metric-trend">Buy</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Social Media</div>
+                                <div class="metric-value">Bullish</div>
+                                <div class="metric-trend positive">▲ Trending</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Institutional Activity</div>
+                                <div class="metric-value">Accumulating</div>
+                                <div class="metric-trend positive">+2.3% QoQ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Valuation Tab -->
+                <div id="valuation" class="tab-panel" style="display: none;">
+                    <h3 style="margin-bottom: 2rem;">Advanced DCF Valuation Model</h3>
+                    
+                    <div class="dcf-container">
+                        <div class="dcf-panel">
+                            <h3>
+                                <span>⚙️</span>
+                                <span>Model Inputs</span>
+                            </h3>
+                            
+                            <div class="input-group">
+                                <label class="input-label">Base Year Free Cash Flow</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="input-field" id="fcf" value="52000" />
+                                    <span class="input-suffix">₹ Cr</span>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Revenue Growth Rate (Years 1-5)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="input-field" id="growth1" value="12" step="0.5" />
+                                    <span class="input-suffix">%</span>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Revenue Growth Rate (Years 6-10)</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="input-field" id="growth2" value="8" step="0.5" />
+                                    <span class="input-suffix">%</span>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Terminal Growth Rate</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="input-field" id="terminalGrowth" value="4" step="0.5" />
+                                    <span class="input-suffix">%</span>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Weighted Average Cost of Capital</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="input-field" id="wacc" value="10.5" step="0.1" />
+                                    <span class="input-suffix">%</span>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Tax Rate</label>
+                                <div class="input-wrapper">
+                                    <input type="number" class="input-field" id="taxRate" value="25" step="0.5" />
+                                    <span class="input-suffix">%</span>
+                                </div>
+                            </div>
+
+                            <button class="calculate-btn" onclick="calculateAdvancedDCF()">
+                                <span>🧮</span>
+                                <span>Calculate Fair Value</span>
+                            </button>
+                        </div>
+
+                        <div class="dcf-panel">
+                            <h3>
+                                <span>📊</span>
+                                <span>Valuation Results</span>
+                            </h3>
+                            
+                            <div id="valuationResults">
+                                <div class="valuation-result">
+                                    <div style="margin-bottom: 1rem;">
+                                        <div style="font-size: 0.9rem; color: var(--gray);">Intrinsic Value per Share</div>
+                                        <div class="result-value">₹3,150</div>
+                                    </div>
+                                    <div class="result-comparison">
+                                        <div>
+                                            <div style="font-size: 0.9rem; color: var(--gray);">Current Market Price</div>
+                                            <div style="font-size: 1.5rem; font-weight: 600;">₹2,842.50</div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 0.9rem; color: var(--gray);">Upside Potential</div>
+                                            <div style="font-size: 1.5rem; font-weight: 600; color: var(--success);">+10.8%</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 2rem;">
+                                    <h4 style="margin-bottom: 1rem;">Sensitivity Analysis</h4>
+                                    <div class="sensitivity-grid">
+                                        <div class="sensitivity-item">
+                                            <span>WACC ±1%</span>
+                                            <span>₹2,850 - ₹3,480</span>
+                                        </div>
+                                        <div class="sensitivity-item">
+                                            <span>Growth ±2%</span>
+                                            <span>₹2,920 - ₹3,420</span>
+                                        </div>
+                                        <div class="sensitivity-item">
+                                            <span>Terminal ±0.5%</span>
+                                            <span>₹3,050 - ₹3,260</span>
+                                        </div>
+                                        <div class="sensitivity-item">
+                                            <span>FCF ±10%</span>
+                                            <span>₹2,835 - ₹3,465</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 2rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                                    <h4 style="margin-bottom: 0.5rem;">Model Confidence</h4>
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                            <div style="width: 85%; height: 100%; background: var(--success);"></div>
+                                        </div>
+                                        <span style="font-weight: 600;">85%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Multiple Valuation Methods -->
+                    <div style="margin-top: 3rem;">
+                        <h3 style="margin-bottom: 1.5rem;">Comparative Valuation Methods</h3>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-icon">📈</div>
+                                <div class="metric-label">DCF Model</div>
+                                <div class="metric-value">₹3,150</div>
+                                <div class="metric-trend">Primary Method</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">📊</div>
+                                <div class="metric-label">P/E Multiple</div>
+                                <div class="metric-value">₹2,980</div>
+                                <div class="metric-trend">Industry Avg: 25x</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">💼</div>
+                                <div class="metric-label">EV/EBITDA</div>
+                                <div class="metric-value">₹3,220</div>
+                                <div class="metric-trend">Multiple: 14x</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">📖</div>
+                                <div class="metric-label">P/B Multiple</div>
+                                <div class="metric-value">₹2,890</div>
+                                <div class="metric-trend">Book Value: 3.2x</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">🎯</div>
+                                <div class="metric-label">Analyst Target</div>
+                                <div class="metric-value">₹3,075</div>
+                                <div class="metric-trend">Consensus</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">⚖️</div>
+                                <div class="metric-label">Weighted Average</div>
+                                <div class="metric-value" style="color: var(--success);">₹3,063</div>
+                                <div class="metric-trend positive">Fair Value</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financials Tab -->
+                <div id="financials" class="tab-panel" style="display: none;">
+                    <h3>Comprehensive Financial Analysis</h3>
+                    
+                    <!-- Revenue & Profit Trends -->
+                    <div class="chart-wrapper" style="margin-top: 2rem;">
+                        <div class="chart-header">
+                            <h4>Revenue & Profit Trends</h4>
+                            <div class="chart-controls">
+                                <button class="chart-btn active">Quarterly</button>
+                                <button class="chart-btn">Annual</button>
+                            </div>
+                        </div>
+                        <canvas id="financialChart" style="max-width: 100%; height: 300px;"></canvas>
+                    </div>
+
+                    <!-- Detailed Financial Table -->
+                    <div style="margin-top: 2rem;">
+                        <h4 style="margin-bottom: 1rem;">Quarterly Performance (₹ Crores)</h4>
+                        <table class="financial-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th style="text-align: right;">Q3 FY24</th>
+                                    <th style="text-align: right;">Q2 FY24</th>
+                                    <th style="text-align: right;">Q1 FY24</th>
+                                    <th style="text-align: right;">Q3 FY23</th>
+                                    <th style="text-align: right;">YoY %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Total Revenue</td>
+                                    <td style="text-align: right;">2,48,520</td>
+                                    <td style="text-align: right;">2,40,870</td>
+                                    <td style="text-align: right;">2,35,420</td>
+                                    <td style="text-align: right;">2,28,990</td>
+                                    <td style="text-align: right; color: var(--success);">+8.5%</td>
+                                </tr>
+                                <tr class="table-highlight">
+                                    <td>EBITDA</td>
+                                    <td style="text-align: right;">42,340</td>
+                                    <td style="text-align: right;">40,120</td>
+                                    <td style="text-align: right;">39,870</td>
+                                    <td style="text-align: right;">38,450</td>
+                                    <td style="text-align: right; color: var(--success);">+10.1%</td>
+                                </tr>
+                                <tr>
+                                    <td>EBITDA Margin</td>
+                                    <td style="text-align: right;">17.0%</td>
+                                    <td style="text-align: right;">16.7%</td>
+                                    <td style="text-align: right;">16.9%</td>
+                                    <td style="text-align: right;">16.8%</td>
+                                    <td style="text-align: right; color: var(--success);">+20 bps</td>
+                                </tr>
+                                <tr>
+                                    <td>Net Profit</td>
+                                    <td style="text-align: right;">18,540</td>
+                                    <td style="text-align: right;">17,920</td>
+                                    <td style="text-align: right;">17,680</td>
+                                    <td style="text-align: right;">17,210</td>
+                                    <td style="text-align: right; color: var(--success);">+7.7%</td>
+                                </tr>
+                                <tr>
+                                    <td>EPS (₹)</td>
+                                    <td style="text-align: right;">27.4</td>
+                                    <td style="text-align: right;">26.5</td>
+                                    <td style="text-align: right;">26.1</td>
+                                    <td style="text-align: right;">25.4</td>
+                                    <td style="text-align: right; color: var(--success);">+7.9%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Segment-wise Performance -->
+                    <div style="margin-top: 3rem;">
+                        <h4 style="margin-bottom: 1rem;">Segment-wise Revenue Breakdown</h4>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">O2C (Oil to Chemicals)</div>
+                                <div class="metric-value">₹1,52,340 Cr</div>
+                                <div class="metric-trend negative">▼ -2.3% QoQ</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Retail</div>
+                                <div class="metric-value">₹76,025 Cr</div>
+                                <div class="metric-trend positive">▲ +19.2% YoY</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Jio Platforms</div>
+                                <div class="metric-value">₹28,871 Cr</div>
+                                <div class="metric-trend positive">▲ +11.5% YoY</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Others</div>
+                                <div class="metric-value">₹4,284 Cr</div>
+                                <div class="metric-trend">Stable</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Financial Ratios -->
+                    <div style="margin-top: 3rem;">
+                        <h4 style="margin-bottom: 1rem;">Financial Health Indicators</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem;">
+                            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px;">
+                                <h5 style="margin-bottom: 1rem; color: var(--primary);">Profitability Ratios</h5>
+                                <div style="display: grid; gap: 1rem;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Gross Margin</span>
+                                        <span style="font-weight: 600;">38.5%</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Operating Margin</span>
+                                        <span style="font-weight: 600;">15.2%</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Net Margin</span>
+                                        <span style="font-weight: 600;">7.5%</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>ROCE</span>
+                                        <span style="font-weight: 600;">12.8%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px;">
+                                <h5 style="margin-bottom: 1rem; color: var(--primary);">Efficiency Ratios</h5>
+                                <div style="display: grid; gap: 1rem;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Asset Turnover</span>
+                                        <span style="font-weight: 600;">0.85x</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Inventory Days</span>
+                                        <span style="font-weight: 600;">42 days</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Receivable Days</span>
+                                        <span style="font-weight: 600;">18 days</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Cash Conversion</span>
+                                        <span style="font-weight: 600;">35 days</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Hub Tab -->
+                <div id="reports" class="tab-panel" style="display: none;">
+                    <h3>Intelligent Document Repository</h3>
+                    
+                    <!-- AI Summary of Latest Report -->
+                    <div class="ai-analysis-panel" style="margin-top: 2rem;">
+                        <h4 style="margin-bottom: 1rem;">🤖 AI Summary: Q3 FY24 Earnings Call</h4>
+                        <div style="display: grid; gap: 1rem;">
+                            <div>
+                                <strong>Key Takeaways:</strong>
+                                <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                                    <li>Management confident about 15-20% EBITDA growth guidance for FY24</li>
+                                    <li>Jio's 5G rollout ahead of schedule - 90% population coverage expected by March</li>
+                                    <li>Retail business seeing strong traction in tier 2/3 cities with 25% same-store growth</li>
+                                    <li>New energy giga factories to commence production by Q2 FY25</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <strong>Red Flags Identified:</strong>
+                                <ul style="margin-top: 0.5rem; margin-left: 1.5rem; color: var(--danger);">
+                                    <li>O2C margins under pressure due to weak Singapore GRM spreads</li>
+                                    <li>Capex guidance increased by ₹15,000 Cr for new energy investments</li>
+                                    <li>Competitive intensity in telecom space remains high</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reports List -->
+                    <div class="reports-container" style="margin-top: 2rem;">
+                        <div class="report-card">
+                            <div class="report-icon">📊</div>
+                            <div class="report-details">
+                                <div class="report-title">Q3 FY24 Earnings Call Transcript</div>
+                                <div class="report-meta">
+                                    <span>📅 Jan 19, 2024</span>
+                                    <span>📄 45 pages</span>
+                                    <span>🎧 Audio: 58 min</span>
+                                    <span>✨ AI Summary Available</span>
+                                </div>
+                            </div>
+                            <div class="report-actions">
+                                <button class="report-btn">
+                                    <span>🤖</span>
+                                    <span>AI Summary</span>
+                                </button>
+                                <button class="report-btn">
+                                    <span>📄</span>
+                                    <span>Full PDF</span>
+                                </button>
+                                <button class="report-btn">
+                                    <span>🎧</span>
+                                    <span>Play Audio</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="report-card">
+                            <div class="report-icon">📘</div>
+                            <div class="report-details">
+                                <div class="report-title">Annual Report 2023</div>
+                                <div class="report-meta">
+                                    <span>📅 Jun 30, 2023</span>
+                                    <span>📄 480 pages</span>
+                                    <span>✨ Key Sections Extracted</span>
+                                </div>
+                            </div>
+                            <div class="report-actions">
+                                <button class="report-btn">
+                                    <span>🔍</span>
+                                    <span>Quick View</span>
+                                </button>
+                                <button class="report-btn">
+                                    <span>💼</span>
+                                    <span>MD&A</span>
+                                </button>
+                                <button class="report-btn">
+                                    <span>📥</span>
+                                    <span>Download</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="report-card">
+                            <div class="report-icon">🎯</div>
+                            <div class="report-details">
+                                <div class="report-title">Investor Presentation Q3 FY24</div>
+                                <div class="report-meta">
+                                    <span>📅 Jan 19, 2024</span>
+                                    <span>📊 65 slides</span>
+                                    <span>✨ Interactive Charts</span>
+                                </div>
+                            </div>
+                            <div class="report-actions">
+                                <button class="report-btn">
+                                    <span>📊</span>
+                                    <span>View Slides</span>
+                                </button>
+                                <button class="report-btn">
+                                    <span>📈</span>
+                                    <span>Key Charts</span>
+                                </button>
+                                <button class="report-btn">
+                                    <span>📥</span>
+                                    <span>Export</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="report-card">
+                            <div class="report-icon">🔔</div>
+                            <div class="report-details">
+                                <div class="report-title">Corporate Action: Bonus Issue</div>
+                                <div class="report-meta">
+                                    <span>📅 Dec 15, 2023</span>
+                                    <span>📄 Ratio 1:1</span>
+                                    <span>✅ Completed</span>
+                                </div>
+                            </div>
+                            <div class="report-actions">
+                                <button class="report-btn">
+                                    <span>📋</span>
+                                    <span>Details</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Document Intelligence -->
+                    <div style="margin-top: 3rem;">
+                        <h4 style="margin-bottom: 1rem;">📚 Document Intelligence</h4>
+                        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px;">
+                            <p style="margin-bottom: 1rem;">Ask questions about any document in natural language:</p>
+                            <div style="display: flex; gap: 1rem;">
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g., What was the capex guidance for FY24?" 
+                                    style="flex: 1; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px;"
+                                />
+                                <button class="action-btn primary">
+                                    <span>🔍</span>
+                                    <span>Search Docs</span>
+                                </button>
+                            </div>
+                            <div style="margin-top: 1rem; color: var(--gray); font-size: 0.9rem;">
+                                💡 Powered by AI document analysis across 50+ reports, transcripts, and presentations
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript for Functionality -->
+    <script>
+        // Initialize Charts
+        function initializeCharts() {
+            // Price Chart
+            const priceCtx = document.getElementById('priceChart');
+            if (priceCtx) {
+                const priceChart = priceCtx.getContext('2d');
+                // Simple line representation
+                priceChart.beginPath();
+                priceChart.moveTo(50, 200);
+                priceChart.quadraticCurveTo(150, 150, 250, 180);
+                priceChart.quadraticCurveTo(350, 120, 450, 100);
+                priceChart.strokeStyle = '#1e3a8a';
+                priceChart.lineWidth = 3;
+                priceChart.stroke();
+            }
+
+            // Financial Chart
+            const finCtx = document.getElementById('financialChart');
+            if (finCtx) {
+                const finChart = finCtx.getContext('2d');
+                // Simple bar representation
+                const barWidth = 60;
+                const bars = [180, 200, 220, 240];
+                bars.forEach((height, index) => {
+                    finChart.fillStyle = '#1e3a8a';
+                    finChart.fillRect(100 + index * 80, 300 - height, barWidth, height);
+                });
+            }
+        }
+
+        // Tab Functionality
+        const tabs = document.querySelectorAll('.tab');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                tabPanels.forEach(panel => {
+                    panel.style.display = 'none';
+                });
+                document.getElementById(tabId).style.display = 'block';
+                
+                // Reinitialize charts when switching tabs
+                if (tabId === 'overview' || tabId === 'financials') {
+                    setTimeout(initializeCharts, 100);
+                }
+            });
+        });
+
+        // Company Selection
+        const companyItems = document.querySelectorAll('.company-item');
+        companyItems.forEach(item => {
+            item.addEventListener('click', () => {
+                companyItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                // Simulate loading new company data
+                const companyName = item.querySelector('.company-name').textContent;
+                document.querySelector('.stock-info h1').textContent = companyName;
+                
+                // Add fade animation
+                document.querySelector('.main-content').style.opacity = '0.5';
+                setTimeout(() => {
+                    document.querySelector('.main-content').style.opacity = '1';
+                }, 300);
+            });
+        });
+
+        // Search Functionality
+        const searchInput = document.getElementById('stockSearch');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            companyItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
+        });
+
+        // Advanced DCF Calculator
+        function calculateAdvancedDCF() {
+            const fcf = parseFloat(document.getElementById('fcf').value);
+            const growth1 = parseFloat(document.getElementById('growth1').value) / 100;
+            const growth2 = parseFloat(document.getElementById('growth2').value) / 100;
+            const terminalGrowth = parseFloat(document.getElementById('terminalGrowth').value) / 100;
+            const wacc = parseFloat(document.getElementById('wacc').value) / 100;
+            const taxRate = parseFloat(document.getElementById('taxRate').value) / 100;
+            
+            let pv = 0;
+            let currentFCF = fcf;
+            
+            // Calculate PV of cash flows for years 1-5
+            for (let i = 1; i <= 5; i++) {
+                currentFCF = currentFCF * (1 + growth1);
+                pv += currentFCF / Math.pow(1 + wacc, i);
+            }
+            
+            // Calculate PV of cash flows for years 6-10
+            for (let i = 6; i <= 10; i++) {
+                currentFCF = currentFCF * (1 + growth2);
+                pv += currentFCF / Math.pow(1 + wacc, i);
+            }
+            
+            // Calculate terminal value
+            const terminalFCF = currentFCF * (1 + terminalGrowth);
+            const terminalValue = terminalFCF / (wacc - terminalGrowth);
+            const pvTerminal = terminalValue / Math.pow(1 + wacc, 10);
+            
+            const enterpriseValue = pv + pvTerminal;
+            const netDebt = 150000; // This would be pulled from financial data
+            const sharesOutstanding = 676; // in crores
+            const equityValue = enterpriseValue - netDebt;
+            const fairValue = equityValue / sharesOutstanding;
+            
+            const currentPrice = 2842.50;
+            const upside = ((fairValue - currentPrice) / currentPrice * 100).toFixed(1);
+            
+            // Update the results
+            document.getElementById('valuationResults').innerHTML = `
+                <div class="valuation-result">
+                    <div style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.9rem; color: var(--gray);">Intrinsic Value per Share</div>
+                        <div class="result-value">₹${fairValue.toFixed(0)}</div>
+                    </div>
+                    <div class="result-comparison">
+                        <div>
+                            <div style="font-size: 0.9rem; color: var(--gray);">Current Market Price</div>
+                            <div style="font-size: 1.5rem; font-weight: 600;">₹${currentPrice}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.9rem; color: var(--gray);">Upside Potential</div>
+                            <div style="font-size: 1.5rem; font-weight: 600; color: ${upside > 0 ? 'var(--success)' : 'var(--danger)'}">
+                                ${upside > 0 ? '+' : ''}${upside}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h4 style="margin-bottom: 1rem;">Sensitivity Analysis</h4>
+                    <div class="sensitivity-grid">
+                        <div class="sensitivity-item">
+                            <span>WACC ±1%</span>
+                            <span>₹${(fairValue * 0.9).toFixed(0)} - ₹${(fairValue * 1.1).toFixed(0)}</span>
+                        </div>
+                        <div class="sensitivity-item">
+                            <span>Growth ±2%</span>
+                            <span>₹${(fairValue * 0.92).toFixed(0)} - ₹${(fairValue * 1.08).toFixed(0)}</span>
+                        </div>
+                        <div class="sensitivity-item">
+                            <span>Terminal ±0.5%</span>
+                            <span>₹${(fairValue * 0.97).toFixed(0)} - ₹${(fairValue * 1.03).toFixed(0)}</span>
+                        </div>
+                        <div class="sensitivity-item">
+                            <span>FCF ±10%</span>
+                            <span>₹${(fairValue * 0.9).toFixed(0)} - ₹${(fairValue * 1.1).toFixed(0)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                    <h4 style="margin-bottom: 0.5rem;">Model Confidence</h4>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div style="width: 85%; height: 100%; background: var(--success);"></div>
+                        </div>
+                        <span style="font-weight: 600;">85%</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Real-time Price Updates Simulation
+        function updatePrices() {
+            const priceElement = document.querySelector('.current-price');
+            const changeElement = document.querySelector('.price-change-info span:first-child');
+            
+            if (priceElement && changeElement) {
+                const basePrice = 2842.50;
+                const randomChange = (Math.random() - 0.5) * 20;
+                const newPrice = basePrice + randomChange;
+                const changePercent = (randomChange / basePrice * 100).toFixed(2);
+                
+                priceElement.textContent = `₹${newPrice.toFixed(2)}`;
+                changeElement.textContent = `${randomChange >= 0 ? '▲' : '▼'} ₹${Math.abs(randomChange).toFixed(2)} (${randomChange >= 0 ? '+' : ''}${changePercent}%)`;
+                changeElement.className = randomChange >= 0 ? 'positive' : 'negative';
+            }
+            
+            // Update company list prices
+            const companyItems = document.querySelectorAll('.company-item');
+            companyItems.forEach(item => {
+                const changeElem = item.querySelector('.company-change');
+                if (changeElem) {
+                    const currentChange = parseFloat(changeElem.textContent);
+                    const newChange = currentChange + (Math.random() - 0.5) * 0.5;
+                    changeElem.textContent = `${newChange >= 0 ? '+' : ''}${newChange.toFixed(1)}%`;
+                    changeElem.className = `company-change ${newChange >= 0 ? 'positive' : 'negative'}`;
+                }
+            });
+        }
+
+        // Update market indices
+        function updateMarketIndices() {
+            const indexCards = document.querySelectorAll('.index-card');
+            indexCards.forEach(card => {
+                const valueElem = card.querySelector('.index-value');
+                const changeElem = card.querySelector('.index-change');
+                const currentValue = parseFloat(valueElem.textContent.replace(',', ''));
+                const change = (Math.random() - 0.5) * 2;
+                const newValue = currentValue * (1 + change / 100);
+                
+                valueElem.textContent = newValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                changeElem.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                changeElem.className = `index-change ${change >= 0 ? 'positive' : 'negative'}`;
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCharts();
+            calculateAdvancedDCF();
+            
+            // Simulate real-time updates
+            setInterval(updatePrices, 5000);
+            setInterval(updateMarketIndices, 10000);
+        });
+
+        // Chart period selection
+        document.querySelectorAll('.chart-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                // In real app, this would load different time period data
+            });
+        });
+
+        // Report actions
+        document.querySelectorAll('.report-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const action = this.textContent.trim();
+                // In real app, this would handle different report actions
+                alert(`${action} functionality would be implemented here`);
+            });
+        });
+
+        // Action buttons
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.textContent.includes('AI Analysis')) {
+                    // Switch to AI Analysis tab
+                    document.querySelector('[data-tab="ai-analysis"]').click();
+                } else if (this.textContent.includes('Generate Report')) {
+                    alert('Generating comprehensive PDF report...');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
