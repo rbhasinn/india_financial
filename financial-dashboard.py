@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+Indian Financial Dashboard - Complete Working System
+Uses only FREE APIs - No paid subscriptions needed!
+"""
 
 import streamlit as st
 
@@ -28,6 +32,12 @@ import time
 DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits", key="demo_mode_toggle")
 
 # Page config
+st.set_page_config(
+    page_title="StockIQ India - Professional Financial Dashboard",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Custom CSS
 st.markdown("""
@@ -738,26 +748,9 @@ def calculate_growth(series):
     except:
         return 0
 
-# Add API Key configuration in sidebar
+# Sidebar - User Authentication
 with st.sidebar:
     st.header("🔐 User Account")
-    
-    # API Configuration
-    with st.expander("🔑 API Configuration"):
-        news_api_key = st.text_input(
-            "NewsAPI Key", 
-            type="password",
-            value=st.session_state.get('news_api_key', ''),
-            help="Get your free API key at https://newsapi.org"
-        )
-        if st.button("Save API Key"):
-            st.session_state.news_api_key = news_api_key
-            st.success("API Key saved for this session!")
-        
-        if not st.session_state.get('news_api_key'):
-            st.warning("Add NewsAPI key for real news")
-        else:
-            st.success("NewsAPI configured ✓")
     
     if st.session_state.user is None:
         tab1, tab2 = st.tabs(["Login", "Sign Up"])
@@ -796,20 +789,6 @@ with st.sidebar:
 # Main App
 st.title("📈 StockIQ India - Professional Financial Dashboard")
 st.markdown("Real-time Indian stock market data, analysis, and portfolio management")
-
-# Important notice
-if not st.session_state.get('news_api_key'):
-    st.info("""
-    🔔 **Welcome to StockIQ India!** 
-    
-    **✅ Working Features (No API needed):**
-    - Real stock prices & charts
-    - Technical indicators (RSI, MACD, etc.)
-    - Portfolio tracking
-    - DCF Calculator with real financials
-    
-    **🔑 For News Feed:** Add your free NewsAPI key in the sidebar → API Configuration
-    """)
 
 # Add Demo Mode Toggle
 DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
