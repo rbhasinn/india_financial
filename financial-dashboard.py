@@ -1,6 +1,19 @@
 #!/usr/bin/env python3
+"""
+Indian Financial Dashboard - Complete Working System
+Uses only FREE APIs - No paid subscriptions needed!
+"""
 
 import streamlit as st
+
+# Page config MUST BE FIRST Streamlit command
+st.set_page_config(
+    page_title="StockIQ India - Financial Dashboard",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -14,23 +27,6 @@ import sqlite3
 import hashlib
 import os
 import time
-
-# Page config MUST BE FIRST Streamlit command
-st.set_page_config(
-
-# Page config MUST BE FIRST Streamlit command
-st.set_page_config(
-    page_title="StockIQ India - Financial Dashboard",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-    page_title="StockIQ India - Financial Dashboard",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Custom CSS
 st.markdown("""
@@ -102,7 +98,6 @@ st.markdown("""
 
 # Demo Mode Toggle
 DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits", key="demo_mode_toggle")
-# Add Demo Mode Toggle AFTER page config
 # Initialize session state
 if 'user' not in st.session_state:
     st.session_state.user = None
