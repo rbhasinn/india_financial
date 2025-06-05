@@ -394,14 +394,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Initialize session state
-if 'portfolio' not in st.session_state:
-    st.session_state.portfolio = {}
 if 'watchlist' not in st.session_state:
     st.session_state.watchlist = []
-if 'orders' not in st.session_state:
-    st.session_state.orders = []
-if 'balance' not in st.session_state:
-    st.session_state.balance = 1000000  # Starting with 10 lakhs
 
 # Extended stock list with metadata
 INDIAN_STOCKS = {
@@ -673,57 +667,6 @@ def format_indian_number(num):
     else:
         return f"₹{num:.2f}"
 
-def calculate_portfolio_metrics(portfolio):
-    """Calculate portfolio performance metrics"""
-    total_value = 0
-    total_cost = 0
-    daily_change = 0
-    portfolio_beta = 0
-    sector_allocation = {}
-    
-    for symbol, position in portfolio.items():
-        stock_data = get_stock_data(symbol, '1d')
-        if stock_data:
-            current_value = position['quantity'] * stock_data['current_price']
-            cost_basis = position['quantity'] * position['avg_price']
-            total_value += current_value
-            total_cost += cost_basis
-            daily_change += position['quantity'] * stock_data['change']
-            portfolio_beta += (current_value / total_value) * stock_data.get('beta', 1) if total_value > 0 else 0
-            
-            sector = stock_data['sector']
-            sector_allocation[sector] = sector_allocation.get(sector, 0) + current_value
-    
-    total_return = ((total_value - total_cost) / total_cost * 100) if total_cost > 0 else 0
-    
-    # Calculate Sharpe ratio (simplified)
-    risk_free_rate = 0.06  # 6% annual
-    if len(portfolio) > 0:
-        returns = []
-        for symbol in portfolio:
-            data = get_stock_data(symbol, '1mo')
-            if data and len(data['history']) > 0:
-                returns.extend(data['history']['Returns'].dropna().tolist())
-        
-        if returns:
-            avg_return = np.mean(returns) * 252  # Annualized
-            std_return = np.std(returns) * np.sqrt(252)  # Annualized
-            sharpe_ratio = (avg_return - risk_free_rate) / std_return if std_return > 0 else 0
-        else:
-            sharpe_ratio = 0
-    else:
-        sharpe_ratio = 0
-    
-    return {
-        'total_value': total_value,
-        'total_cost': total_cost,
-        'total_return': total_return,
-        'daily_change': daily_change,
-        'portfolio_beta': portfolio_beta,
-        'sharpe_ratio': sharpe_ratio,
-        'sector_allocation': sector_allocation
-    }
-
 def generate_trade_signals(stock_data):
     """Generate trading signals based on technical indicators"""
     signals = []
@@ -819,33 +762,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Market Status and Time
-col1, col2, col3 = st.columns([2, 1, 1])
-with col1:
-    current_time = datetime.now()
-    market_open = current_time.replace(hour=9, minute=15, second=0)
-    market_close = current_time.replace(hour=15, minute=30, second=0)
-    
-    if market_open <= current_time <= market_close and current_time.weekday() < 5:
-        market_status = "🟢 MARKET OPEN"
-        status_color = "#22c55e"
-    else:
-        market_status = "🔴 MARKET CLOSED"
-        status_color = "#dc2626"
-    
-    st.markdown(f"""
-    <div style='padding: 10px; background-color: #1a1a1a; border-radius: 8px; border: 1px solid #333;'>
-        <span style='color: {status_color}; font-weight: 700; font-size: 16px;'>{market_status}</span>
-        <span style='color: #888; margin-left: 20px;'>{current_time.strftime('%d %b %Y, %I:%M %p')}</span>
-    </div>
-    """, unsafe_allow_html=True)
+current_time = datetime.now()
+market_open = current_time.replace(hour=9, minute=15, second=0)
+market_close = current_time.replace(hour=15, minute=30, second=0)
 
-with col2:
-    st.metric("Portfolio Value", format_indian_number(st.session_state.balance))
+if market_open <= current_time <= market_close and current_time.weekday() < 5:
+    market_status = "🟢 MARKET OPEN"
+    status_color = "#22c55e"
+else:
+    market_status = "🔴 MARKET CLOSED"
+    status_color = "#dc2626"
 
-with col3:
-    portfolio_metrics = calculate_portfolio_metrics(st.session_state.portfolio)
-    daily_pl = portfolio_metrics['daily_change']
-    st.metric("Today's P&L", format_indian_number(daily_pl), f"{daily_pl/st.session_state.balance*100:.2f}%")
+st.markdown(f"""
+<div style='padding: 10px; background-color: #2a2a2a; border-radius: 8px; border: 1px solid #404040; text-align: center;'>
+    <span style='color: {status_color}; font-weight: 700; font-size: 18px;'>{market_status}</span>
+    <span style='color: #b3b3b3; margin-left: 20px;'>{current_time.strftime('%d %b %Y, %I:%M %p IST')}</span>
+</div>
+""", unsafe_allow_html=True)
 
 # Market Overview
 st.markdown("### 📊 Market Overview")
@@ -874,16 +807,14 @@ for idx, (symbol, name) in enumerate(zip(major_indices, index_names)):
 
 # Main Content Tabs
 tabs = st.tabs([
-    "📈 Trading Terminal", 
-    "💼 Portfolio", 
+    "📈 Market Overview", 
     "📊 Analytics",
     "🎯 Screener",
     "📰 Market News",
-    "🤖 AI Signals",
-    "⚙️ Settings"
+    "🤖 AI Signals"
 ])
 
-# Tab 1: Trading Terminal
+# Tab 1: Market Overview
 with tabs[0]:
     # Stock selector
     col1, col2 = st.columns([3, 1])
@@ -1097,7 +1028,10 @@ with tabs[0]:
                 x=1
             ),
             xaxis_rangeslider_visible=False,
-            hovermode='x unified'
+            hovermode='x unified',
+            plot_bgcolor='#1a1a1a',
+            paper_bgcolor='#1a1a1a',
+            font=dict(color='#ffffff')
         )
         
         # Update axes
@@ -1106,81 +1040,22 @@ with tabs[0]:
         
         st.plotly_chart(fig, use_container_width=True)
         
-        # Trading Panel
-        st.markdown("### 🎯 Trading Panel")
+        # Technical Analysis Summary
+        st.markdown("### 📊 Technical Analysis Summary")
+        # Technical Analysis Summary
+        st.markdown("### 📊 Technical Analysis Summary")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("#### Place Order")
-            
-            order_type = st.radio("Order Type", ["Buy", "Sell"], horizontal=True)
-            quantity = st.number_input("Quantity", min_value=1, value=1)
-            price_type = st.selectbox("Price Type", ["Market", "Limit"])
-            
-            if price_type == "Limit":
-                limit_price = st.number_input("Limit Price", value=stock_data['current_price'])
-            else:
-                limit_price = stock_data['current_price']
-            
-            total_value = quantity * limit_price
-            
-            st.info(f"Total Value: {format_indian_number(total_value)}")
-            
-            if st.button(f"Place {order_type} Order", type="primary", use_container_width=True):
-                if order_type == "Buy":
-                    if total_value <= st.session_state.balance:
-                        # Add to portfolio
-                        if selected_stock in st.session_state.portfolio:
-                            old_qty = st.session_state.portfolio[selected_stock]['quantity']
-                            old_avg = st.session_state.portfolio[selected_stock]['avg_price']
-                            new_qty = old_qty + quantity
-                            new_avg = ((old_qty * old_avg) + (quantity * limit_price)) / new_qty
-                            st.session_state.portfolio[selected_stock] = {
-                                'quantity': new_qty,
-                                'avg_price': new_avg
-                            }
-                        else:
-                            st.session_state.portfolio[selected_stock] = {
-                                'quantity': quantity,
-                                'avg_price': limit_price
-                            }
-                        
-                        st.session_state.balance -= total_value
-                        st.session_state.orders.append({
-                            'time': datetime.now(),
-                            'symbol': selected_stock,
-                            'type': 'BUY',
-                            'quantity': quantity,
-                            'price': limit_price,
-                            'value': total_value
-                        })
-                        st.success(f"Buy order executed! Bought {quantity} shares at ₹{limit_price:.2f}")
-                        st.rerun()
-                    else:
-                        st.error("Insufficient balance!")
-                else:  # Sell
-                    if selected_stock in st.session_state.portfolio:
-                        if st.session_state.portfolio[selected_stock]['quantity'] >= quantity:
-                            st.session_state.portfolio[selected_stock]['quantity'] -= quantity
-                            if st.session_state.portfolio[selected_stock]['quantity'] == 0:
-                                del st.session_state.portfolio[selected_stock]
-                            
-                            st.session_state.balance += total_value
-                            st.session_state.orders.append({
-                                'time': datetime.now(),
-                                'symbol': selected_stock,
-                                'type': 'SELL',
-                                'quantity': quantity,
-                                'price': limit_price,
-                                'value': total_value
-                            })
-                            st.success(f"Sell order executed! Sold {quantity} shares at ₹{limit_price:.2f}")
-                            st.rerun()
-                        else:
-                            st.error("Insufficient shares to sell!")
-                    else:
-                        st.error("You don't own this stock!")
+            st.markdown("#### Support & Resistance")
+            st.success(f"S3: ₹{stock_data['support'][2]:.2f}")
+            st.success(f"S2: ₹{stock_data['support'][1]:.2f}")
+            st.success(f"S1: ₹{stock_data['support'][0]:.2f}")
+            st.info(f"Pivot: ₹{stock_data['pivot']:.2f}")
+            st.error(f"R1: ₹{stock_data['resistance'][0]:.2f}")
+            st.error(f"R2: ₹{stock_data['resistance'][1]:.2f}")
+            st.error(f"R3: ₹{stock_data['resistance'][2]:.2f}")
         
         with col2:
             st.markdown("#### AI Trading Signals")
@@ -1192,14 +1067,14 @@ with tabs[0]:
                 mode = "gauge+number",
                 value = strength,
                 domain = {'x': [0, 1], 'y': [0, 1]},
-                title = {'text': recommendation},
+                title = {'text': recommendation, 'font': {'color': '#ffffff'}},
                 gauge = {
                     'axis': {'range': [-100, 100]},
                     'bar': {'color': color},
                     'steps': [
-                        {'range': [-100, -30], 'color': "#1a1a1a"},
-                        {'range': [-30, 30], 'color': "#2d2d2d"},
-                        {'range': [30, 100], 'color': "#1a1a1a"}
+                        {'range': [-100, -30], 'color': "#2a2a2a"},
+                        {'range': [-30, 30], 'color': "#333333"},
+                        {'range': [30, 100], 'color': "#2a2a2a"}
                     ],
                     'threshold': {
                         'line': {'color': "white", 'width': 4},
@@ -1210,9 +1085,9 @@ with tabs[0]:
             ))
             
             fig_gauge.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                font={'color': 'white'},
+                paper_bgcolor='#1a1a1a',
+                plot_bgcolor='#1a1a1a',
+                font={'color': '#ffffff'},
                 height=250
             )
             
@@ -1228,22 +1103,12 @@ with tabs[0]:
                 else:
                     st.info(f"🟡 {signal}")
         
-        # Technical Analysis Summary
-        st.markdown("### 📊 Technical Analysis Summary")
+        # More Technical Details
+        st.markdown("### 📈 Technical Indicators")
         
         tech_cols = st.columns(4)
         
         with tech_cols[0]:
-            st.markdown("#### Support & Resistance")
-            st.success(f"S3: ₹{stock_data['support'][2]:.2f}")
-            st.success(f"S2: ₹{stock_data['support'][1]:.2f}")
-            st.success(f"S1: ₹{stock_data['support'][0]:.2f}")
-            st.info(f"Pivot: ₹{stock_data['pivot']:.2f}")
-            st.error(f"R1: ₹{stock_data['resistance'][0]:.2f}")
-            st.error(f"R2: ₹{stock_data['resistance'][1]:.2f}")
-            st.error(f"R3: ₹{stock_data['resistance'][2]:.2f}")
-        
-        with tech_cols[1]:
             st.markdown("#### Key Indicators")
             latest = stock_data['history'].iloc[-1]
             
@@ -1292,165 +1157,8 @@ with tabs[0]:
             if vol_ratio > 2:
                 st.warning("🔥 Unusual Volume Activity")
 
-# Tab 2: Portfolio
+# Tab 2: Analytics
 with tabs[1]:
-    st.markdown("### 💼 Portfolio Management")
-    
-    if st.session_state.portfolio:
-        # Portfolio summary
-        metrics = calculate_portfolio_metrics(st.session_state.portfolio)
-        
-        col1, col2, col3, col4, col5, col6 = st.columns(6)
-        
-        with col1:
-            st.metric("Total Value", format_indian_number(metrics['total_value']))
-        with col2:
-            st.metric("Total Invested", format_indian_number(metrics['total_cost']))
-        with col3:
-            st.metric("Total Returns", f"{metrics['total_return']:.2f}%", 
-                     f"{format_indian_number(metrics['total_value'] - metrics['total_cost'])}")
-        with col4:
-            st.metric("Today's P&L", format_indian_number(metrics['daily_change']))
-        with col5:
-            st.metric("Portfolio Beta", f"{metrics['portfolio_beta']:.2f}")
-        with col6:
-            st.metric("Sharpe Ratio", f"{metrics['sharpe_ratio']:.2f}")
-        
-        # Holdings table
-        st.markdown("### Holdings")
-        
-        holdings_data = []
-        for symbol, position in st.session_state.portfolio.items():
-            stock_data = get_stock_data(symbol, '1d')
-            if stock_data:
-                current_value = position['quantity'] * stock_data['current_price']
-                cost_basis = position['quantity'] * position['avg_price']
-                pnl = current_value - cost_basis
-                pnl_pct = (pnl / cost_basis) * 100
-                weight = (current_value / metrics['total_value']) * 100 if metrics['total_value'] > 0 else 0
-                
-                holdings_data.append({
-                    'Symbol': symbol,
-                    'Name': stock_data['name'],
-                    'Quantity': position['quantity'],
-                    'Avg Cost': f"₹{position['avg_price']:.2f}",
-                    'Current Price': f"₹{stock_data['current_price']:.2f}",
-                    'Current Value': format_indian_number(current_value),
-                    'P&L': format_indian_number(pnl),
-                    'P&L %': f"{pnl_pct:.2f}%",
-                    'Weight': f"{weight:.1f}%",
-                    'Day Change': f"{stock_data['change_pct']:.2f}%"
-                })
-        
-        holdings_df = pd.DataFrame(holdings_data)
-        st.dataframe(holdings_df, use_container_width=True, hide_index=True)
-        
-        # Portfolio composition charts
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Holdings pie chart
-            values = []
-            labels = []
-            for symbol, position in st.session_state.portfolio.items():
-                stock_data = get_stock_data(symbol, '1d')
-                if stock_data:
-                    current_value = position['quantity'] * stock_data['current_price']
-                    values.append(current_value)
-                    labels.append(stock_data['name'])
-            
-            fig_pie = px.pie(
-                values=values,
-                names=labels,
-                title="Portfolio Allocation",
-                hole=0.4
-            )
-            fig_pie.update_layout(
-                template="plotly_dark",
-                height=400
-            )
-            st.plotly_chart(fig_pie, use_container_width=True)
-        
-        with col2:
-            # Sector allocation
-            fig_sector = px.pie(
-                values=list(metrics['sector_allocation'].values()),
-                names=list(metrics['sector_allocation'].keys()),
-                title="Sector Allocation",
-                hole=0.4
-            )
-            fig_sector.update_layout(
-                template="plotly_dark",
-                height=400
-            )
-            st.plotly_chart(fig_sector, use_container_width=True)
-        
-        # Performance chart
-        st.markdown("### Portfolio Performance")
-        
-        # Calculate cumulative returns
-        dates = []
-        values = []
-        
-        for i in range(30):
-            date = datetime.now() - timedelta(days=30-i)
-            dates.append(date)
-            
-            # Simulate portfolio value (in real app, this would be historical data)
-            daily_return = np.random.normal(0.001, 0.02)
-            if i == 0:
-                values.append(metrics['total_cost'])
-            else:
-                values.append(values[-1] * (1 + daily_return))
-        
-        # Add current value
-        values[-1] = metrics['total_value']
-        
-        fig_perf = go.Figure()
-        fig_perf.add_trace(go.Scatter(
-            x=dates,
-            y=values,
-            mode='lines',
-            name='Portfolio Value',
-            line=dict(color='#3b82f6', width=3)
-        ))
-        
-        fig_perf.update_layout(
-            title="30-Day Portfolio Performance",
-            xaxis_title="Date",
-            yaxis_title="Value (₹)",
-            template="plotly_dark",
-            height=400,
-            hovermode='x unified'
-        )
-        
-        st.plotly_chart(fig_perf, use_container_width=True)
-        
-    else:
-        st.info("Your portfolio is empty. Start trading to build your portfolio!")
-    
-    # Recent transactions
-    st.markdown("### Recent Transactions")
-    
-    if st.session_state.orders:
-        trans_data = []
-        for order in st.session_state.orders[-10:]:  # Last 10 transactions
-            trans_data.append({
-                'Time': order['time'].strftime('%Y-%m-%d %H:%M'),
-                'Symbol': order['symbol'],
-                'Type': order['type'],
-                'Quantity': order['quantity'],
-                'Price': f"₹{order['price']:.2f}",
-                'Value': format_indian_number(order['value'])
-            })
-        
-        trans_df = pd.DataFrame(trans_data)
-        st.dataframe(trans_df, use_container_width=True, hide_index=True)
-    else:
-        st.info("No transactions yet")
-
-# Tab 3: Analytics
-with tabs[2]:
     st.markdown("### 📊 Market Analytics")
     
     # Sector performance
@@ -1491,7 +1199,10 @@ with tabs[2]:
     )
     fig_sector.update_layout(
         template="plotly_dark",
-        height=500
+        height=500,
+        paper_bgcolor='#1a1a1a',
+        plot_bgcolor='#1a1a1a',
+        font=dict(color='#ffffff')
     )
     st.plotly_chart(fig_sector, use_container_width=True)
     
@@ -1593,13 +1304,16 @@ with tabs[2]:
         fig_heatmap.update_layout(
             title="Market Heatmap (Size: Volume, Color: Change %)",
             template="plotly_dark",
-            height=600
+            height=600,
+            paper_bgcolor='#1a1a1a',
+            plot_bgcolor='#1a1a1a',
+            font=dict(color='#ffffff')
         )
         
         st.plotly_chart(fig_heatmap, use_container_width=True)
 
-# Tab 4: Screener
-with tabs[3]:
+# Tab 3: Screener
+with tabs[2]:
     st.markdown("### 🎯 Stock Screener")
     
     # Screener filters
@@ -1757,8 +1471,8 @@ with tabs[3]:
         else:
             st.warning("No stocks found matching the criteria")
 
-# Tab 5: Market News
-with tabs[4]:
+# Tab 4: Market News
+with tabs[3]:
     st.markdown("### 📰 Market News & Events")
     
     # Placeholder for news
@@ -1821,8 +1535,8 @@ with tabs[4]:
     events_df = pd.DataFrame(events)
     st.dataframe(events_df, use_container_width=True, hide_index=True)
 
-# Tab 6: AI Signals
-with tabs[5]:
+# Tab 5: AI Signals
+with tabs[4]:
     st.markdown("### 🤖 AI Trading Signals")
     
     st.info("Advanced AI signals based on machine learning models analyzing technical patterns, market sentiment, and historical data.")
