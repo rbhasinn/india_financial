@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+import plotly.express as px
+from datetime import datetime, timedelta
+import requests
+import json
+from bs4 import BeautifulSoup
+import sqlite3
+import hashlib
+import os
+import time
+
+# Page config MUST BE FIRST Streamlit command
+st.set_page_config(
+
+# Page config MUST BE FIRST Streamlit command
+st.set_page_config(
+    page_title="StockIQ India - Financial Dashboard",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
