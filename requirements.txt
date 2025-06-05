@@ -1,15 +1,8 @@
-cd /Users/rhea/india_financial
-
-# Create requirements.txt
-cat > requirements.txt << EOF
 streamlit
 yfinance
 pandas
 numpy
 plotly
-EOF
-
-# Commit and push
-git add requirements.txt
-git commit -m "Add requirements.txt for deployment"
-git push
+requests
+beautifulsoup4
+lxml
