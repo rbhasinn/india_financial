@@ -7,12 +7,6 @@ Uses only FREE APIs - No paid subscriptions needed!
 import streamlit as st
 
 # COMMENTING OUT PAGE CONFIG TO AVOID ERROR
-# st.set_page_config(
-#     page_title="StockIQ India - Professional Financial Dashboard",
-#     page_icon="📈",
-#     layout="wide",
-#     initial_sidebar_state="expanded"
-# )
 
 import yfinance as yf
 import pandas as pd
@@ -32,12 +26,6 @@ import time
 DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
 
 # Page config
-st.set_page_config(
-    page_title="StockIQ India - Professional Financial Dashboard",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Custom CSS
 st.markdown("""
