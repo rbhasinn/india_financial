@@ -121,6 +121,20 @@ st.markdown("""
         color: #ffffff !important;
     }
     
+    /* Form labels specifically */
+    .stTextInput > label,
+    .stNumberInput > label,
+    .stSelectbox > label,
+    .stMultiSelect > label,
+    .stCheckbox > label,
+    .stRadio > label,
+    .stSlider > label {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        font-size: 16px !important;
+        margin-bottom: 8px !important;
+    }
+    
     /* Buttons - More visible */
     .stButton > button {
         background-color: #3b82f6;
@@ -1475,65 +1489,69 @@ with tabs[2]:
 with tabs[3]:
     st.markdown("### 📰 Market News & Events")
     
-    # Placeholder for news
-    st.info("Real-time news integration requires news API. This is a placeholder for demonstration.")
+    # News for selected stock or market
+    news_stock = st.selectbox(
+        "Select stock for news",
+        options=['Market Overview'] + list(INDIAN_STOCKS.keys()),
+        format_func=lambda x: 'Market Overview' if x == 'Market Overview' else f"{INDIAN_STOCKS[x]['name']} ({x})"
+    )
     
-    # Sample news items
-    news_items = [
-        {
-            'title': 'Markets close higher on positive global cues',
-            'source': 'Economic Times',
-            'time': '2 hours ago',
-            'summary': 'Indian markets ended higher today, with Nifty gaining 0.8% amid positive global sentiment.',
-            'sentiment': 'positive'
-        },
-        {
-            'title': 'RBI keeps repo rate unchanged at 6.5%',
-            'source': 'Business Standard',
-            'time': '4 hours ago',
-            'summary': 'The Reserve Bank of India maintained status quo on policy rates in its bi-monthly review.',
-            'sentiment': 'neutral'
-        },
-        {
-            'title': 'IT stocks under pressure on weak guidance',
-            'source': 'Moneycontrol',
-            'time': '6 hours ago',
-            'summary': 'Major IT companies face selling pressure after cautious commentary on demand environment.',
-            'sentiment': 'negative'
-        }
-    ]
-    
-    for news in news_items:
-        with st.container():
-            col1, col2 = st.columns([5, 1])
+    try:
+        import feedparser
+        
+        if news_stock == 'Market Overview':
+            # General market news
+            rss_url = "https://news.google.com/rss/search?q=NSE+BSE+indian+stock+market&hl=en-IN&gl=IN&ceid=IN:en"
+        else:
+            # Specific stock news
+            company_name = INDIAN_STOCKS.get(news_stock, {}).get('name', news_stock)
+            rss_url = f"https://news.google.com/rss/search?q={company_name.replace(' ', '+')}+stock+NSE&hl=en-IN&gl=IN&ceid=IN:en"
+        
+        feed = feedparser.parse(rss_url)
+        
+        if feed.entries:
+            for idx, entry in enumerate(feed.entries[:15]):  # Show up to 15 news items
+                with st.container():
+                    col1, col2 = st.columns([5, 1])
+                    
+                    with col1:
+                        st.markdown(f"### [{entry.title}]({entry.link})")
+                        
+                        # Parse date if available
+                        if hasattr(entry, 'published'):
+                            st.caption(f"📅 {entry.published} • Google News")
+                        else:
+                            st.caption("📅 Recent • Google News")
+                        
+                        # Show summary if available
+                        if hasattr(entry, 'summary'):
+                            summary = entry.summary[:200] + "..." if len(entry.summary) > 200 else entry.summary
+                            st.write(summary)
+                    
+                    with col2:
+                        # Simple sentiment analysis based on title
+                        title_lower = entry.title.lower()
+                        positive_words = ['gain', 'rise', 'surge', 'rally', 'profit', 'up', 'high', 'positive', 'growth', 'beat']
+                        negative_words = ['fall', 'drop', 'loss', 'decline', 'crash', 'down', 'low', 'negative', 'cut', 'miss']
+                        
+                        pos_count = sum(1 for word in positive_words if word in title_lower)
+                        neg_count = sum(1 for word in negative_words if word in title_lower)
+                        
+                        if pos_count > neg_count:
+                            st.success("Positive")
+                        elif neg_count > pos_count:
+                            st.error("Negative")
+                        else:
+                            st.info("Neutral")
+                    
+                    st.divider()
+        else:
+            st.info("No recent news found. Try selecting a different stock.")
             
-            with col1:
-                st.markdown(f"### {news['title']}")
-                st.caption(f"{news['source']} • {news['time']}")
-                st.write(news['summary'])
-            
-            with col2:
-                if news['sentiment'] == 'positive':
-                    st.success("Positive")
-                elif news['sentiment'] == 'negative':
-                    st.error("Negative")
-                else:
-                    st.info("Neutral")
-            
-            st.divider()
-    
-    # Economic calendar
-    st.markdown("### 📅 Economic Calendar")
-    
-    events = [
-        {'Date': 'Today', 'Event': 'IIP Data Release', 'Impact': 'High', 'Time': '5:30 PM'},
-        {'Date': 'Tomorrow', 'Event': 'CPI Inflation Data', 'Impact': 'High', 'Time': '5:30 PM'},
-        {'Date': 'Friday', 'Event': 'F&O Expiry', 'Impact': 'Medium', 'Time': '3:30 PM'},
-        {'Date': 'Next Week', 'Event': 'RBI MPC Minutes', 'Impact': 'High', 'Time': '10:00 AM'}
-    ]
-    
-    events_df = pd.DataFrame(events)
-    st.dataframe(events_df, use_container_width=True, hide_index=True)
+    except ImportError:
+        st.error("Please install feedparser: `pip install feedparser`")
+    except Exception as e:
+        st.error(f"Error fetching news: {str(e)}")
 
 # Tab 5: AI Signals
 with tabs[4]:
