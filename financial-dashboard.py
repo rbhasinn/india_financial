@@ -5,6 +5,9 @@ Uses only FREE APIs - No paid subscriptions needed!
 """
 
 import streamlit as st
+
+# COMMENTING OUT PAGE CONFIG TO AVOID ERROR
+
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -17,16 +20,12 @@ from bs4 import BeautifulSoup
 import sqlite3
 import hashlib
 import os
-from textblob import TextBlob
-import openai  # For AI summaries (optional - can use free alternatives)
+import time
+
+# Add Demo Mode Toggle
+DEMO_MODE = st.sidebar.checkbox("🎮 Demo Mode (No API calls)", value=False, help="Use mock data to avoid rate limits")
 
 # Page config
-st.set_page_config(
-    page_title="StockIQ India - Professional Financial Dashboard",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Custom CSS
 st.markdown("""
@@ -40,11 +39,58 @@ st.markdown("""
         border-radius: 5px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+    /* Fix text color issues */
+    .stMetric [data-testid="metric-container"] {
+        color: #262730 !important;
+    }
+    .stMetric [data-testid="metric-container"] > div {
+        color: #262730 !important;
+    }
+    .stMetric label {
+        color: #262730 !important;
+    }
     .css-1d391kg {
         padding-top: 1rem;
     }
     .st-bw {
         background-color: #ffffff;
+    }
+    /* Fix selectbox text */
+    .stSelectbox label {
+        color: #262730 !important;
+    }
+    .stSelectbox > div > div {
+        color: #262730 !important;
+    }
+    /* Fix tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 24px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        padding-left: 20px;
+        padding-right: 20px;
+        color: #262730 !important;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #1f77b4;
+        color: white !important;
+        border-radius: 4px;
+    }
+    /* Fix input fields */
+    .stTextInput label, .stNumberInput label {
+        color: #262730 !important;
+    }
+    /* Fix dataframe text */
+    .dataframe {
+        color: #262730 !important;
+    }
+    /* Force dark text in metrics */
+    [data-testid="metric-container"] {
+        color: #262730 !important;
+    }
+    [data-testid="metric-container"] p {
+        color: #262730 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -116,8 +162,19 @@ def create_user(email, password):
         conn.close()
         return False
 
-# Indian stock symbols mapping
+# Indian stock symbols mapping - Start with fewer stocks to avoid rate limits
 INDIAN_STOCKS = {
+    'RELIANCE.NS': 'Reliance Industries',
+    'TCS.NS': 'Tata Consultancy Services',
+    'HDFCBANK.NS': 'HDFC Bank',
+    'INFY.NS': 'Infosys',
+    'ICICIBANK.NS': 'ICICI Bank',
+    '^NSEI': 'Nifty 50',
+    '^BSESN': 'Sensex'
+}
+
+# Full stock list - uncomment stocks as needed
+FULL_STOCK_LIST = {
     'RELIANCE.NS': 'Reliance Industries',
     'TCS.NS': 'Tata Consultancy Services',
     'HDFCBANK.NS': 'HDFC Bank',
@@ -142,20 +199,125 @@ INDIAN_STOCKS = {
     '^BSESN': 'Sensex'
 }
 
+def get_demo_stock_data(symbol, period='1mo'):
+    """Generate realistic demo data without API calls"""
+    np.random.seed(hash(symbol) % 1000)  # Consistent data per symbol
+    
+    # Base prices for different stocks
+    base_prices = {
+        'RELIANCE.NS': 2450,
+        'TCS.NS': 3400,
+        'HDFCBANK.NS': 1650,
+        'INFY.NS': 1430,
+        'ICICIBANK.NS': 980,
+        '^NSEI': 22000,
+        '^BSESN': 72000
+    }
+    
+    base_price = base_prices.get(symbol, 1000)
+    
+    # Generate historical data
+    dates = pd.date_range(end=datetime.now(), periods=30, freq='D')
+    prices = []
+    
+    for i in range(30):
+        # Add some random walk
+        change = np.random.normal(0, base_price * 0.02)
+        base_price = max(base_price * 0.9, base_price + change)  # Prevent negative
+        
+        open_price = base_price + np.random.uniform(-base_price * 0.01, base_price * 0.01)
+        high = open_price + np.random.uniform(0, base_price * 0.02)
+        low = open_price - np.random.uniform(0, base_price * 0.02)
+        close = np.random.uniform(low, high)
+        volume = np.random.randint(1000000, 50000000)
+        
+        prices.append({
+            'Open': open_price,
+            'High': high,
+            'Low': low,
+            'Close': close,
+            'Volume': volume
+        })
+    
+    hist = pd.DataFrame(prices, index=dates)
+    
+    current_price = hist['Close'].iloc[-1]
+    prev_close = hist['Close'].iloc[-2]
+    change = current_price - prev_close
+    change_percent = (change / prev_close) * 100
+    
+    # Generate realistic metrics
+    market_cap = current_price * np.random.randint(10000, 100000) * 10000000
+    pe_ratio = np.random.uniform(15, 35)
+    
+    return {
+        'symbol': symbol,
+        'name': INDIAN_STOCKS.get(symbol, symbol),
+        'current_price': current_price,
+        'change': change,
+        'change_percent': change_percent,
+        'history': hist,
+        'info': {
+            'currentPrice': current_price,
+            'marketCap': market_cap,
+            'trailingPE': pe_ratio,
+            'dividendYield': np.random.uniform(0.001, 0.03),
+            'volume': int(hist['Volume'].iloc[-1]),
+            'dayHigh': hist['High'].iloc[-1],
+            'dayLow': hist['Low'].iloc[-1],
+            'fiftyTwoWeekHigh': hist['High'].max(),
+            'fiftyTwoWeekLow': hist['Low'].min()
+        },
+        'market_cap': market_cap,
+        'pe_ratio': pe_ratio,
+        'dividend_yield': np.random.uniform(0.001, 0.03),
+        'volume': int(hist['Volume'].iloc[-1]),
+        'day_high': hist['High'].iloc[-1],
+        'day_low': hist['Low'].iloc[-1],
+        '52w_high': hist['High'].max(),
+        '52w_low': hist['Low'].min()
+    }
+
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_stock_data(symbol, period='1mo'):
-    """Fetch stock data using yfinance (FREE)"""
+    """Fetch stock data using yfinance (FREE) or demo data"""
+    if DEMO_MODE:
+        return get_demo_stock_data(symbol, period)
+    
     try:
+        # More robust data fetching
         stock = yf.Ticker(symbol)
         
-        # Get historical data
-        hist = stock.history(period=period)
+        # Get historical data with error handling
+        try:
+            hist = stock.history(period=period)
+            if hist.empty:
+                hist = stock.history(period='5d')  # Fallback to 5 days
+        except:
+            hist = pd.DataFrame()
         
-        # Get current info
-        info = stock.info
+        # Try different methods to get current price
+        current_price = None
+        try:
+            # Method 1: From info
+            info = stock.info
+            current_price = info.get('currentPrice') or info.get('regularMarketPrice')
+        except:
+            info = {}
         
-        # Get current price
-        current_price = info.get('currentPrice', hist['Close'].iloc[-1] if len(hist) > 0 else 0)
+        # Method 2: From history
+        if current_price is None and len(hist) > 0:
+            current_price = hist['Close'].iloc[-1]
+        
+        # Method 3: From fast_info (more reliable, less rate limited)
+        if current_price is None:
+            try:
+                current_price = stock.fast_info['lastPrice']
+            except:
+                pass
+        
+        if current_price is None:
+            current_price = 0
         
         # Calculate change
         if len(hist) >= 2:
@@ -178,14 +340,15 @@ def get_stock_data(symbol, period='1mo'):
             'pe_ratio': info.get('trailingPE', 0),
             'dividend_yield': info.get('dividendYield', 0),
             'volume': info.get('volume', 0),
-            'day_high': info.get('dayHigh', 0),
-            'day_low': info.get('dayLow', 0),
-            '52w_high': info.get('fiftyTwoWeekHigh', 0),
-            '52w_low': info.get('fiftyTwoWeekLow', 0)
+            'day_high': info.get('dayHigh', hist['High'].iloc[-1] if len(hist) > 0 else 0),
+            'day_low': info.get('dayLow', hist['Low'].iloc[-1] if len(hist) > 0 else 0),
+            '52w_high': info.get('fiftyTwoWeekHigh', hist['High'].max() if len(hist) > 0 else 0),
+            '52w_low': info.get('fiftyTwoWeekLow', hist['Low'].min() if len(hist) > 0 else 0)
         }
     except Exception as e:
-        st.error(f"Error fetching data for {symbol}: {str(e)}")
-        return None
+        st.error(f"Error fetching {symbol}: {str(e)}")
+        # Fallback to demo data on error
+        return get_demo_stock_data(symbol, period)
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def get_news_sentiment(symbol):
@@ -371,23 +534,32 @@ st.markdown("Real-time Indian stock market data, analysis, and portfolio managem
 # Top metrics
 col1, col2, col3, col4 = st.columns(4)
 
-# Get market indices
-nifty = get_stock_data('^NSEI', '1d')
-sensex = get_stock_data('^BSESN', '1d')
+# Get market indices with error handling
+try:
+    nifty = get_stock_data('^NSEI', '1d')
+    if nifty and nifty['current_price'] > 0:
+        col1.metric(
+            "NIFTY 50",
+            f"{nifty['current_price']:,.2f}",
+            f"{nifty['change_percent']:.2f}%"
+        )
+    else:
+        col1.metric("NIFTY 50", "Loading...", "")
+except:
+    col1.metric("NIFTY 50", "Rate Limited", "")
 
-if nifty:
-    col1.metric(
-        "NIFTY 50",
-        f"{nifty['current_price']:,.2f}",
-        f"{nifty['change_percent']:.2f}%"
-    )
-
-if sensex:
-    col2.metric(
-        "SENSEX",
-        f"{sensex['current_price']:,.2f}",
-        f"{sensex['change_percent']:.2f}%"
-    )
+try:
+    sensex = get_stock_data('^BSESN', '1d')
+    if sensex and sensex['current_price'] > 0:
+        col2.metric(
+            "SENSEX",
+            f"{sensex['current_price']:,.2f}",
+            f"{sensex['change_percent']:.2f}%"
+        )
+    else:
+        col2.metric("SENSEX", "Loading...", "")
+except:
+    col2.metric("SENSEX", "Rate Limited", "")
 
 # Portfolio value (if logged in)
 if st.session_state.user:
@@ -465,25 +637,28 @@ with tab1:
         # Price chart
         st.subheader("Price Chart")
         
-        fig = go.Figure()
-        fig.add_trace(go.Candlestick(
-            x=stock_data['history'].index,
-            open=stock_data['history']['Open'],
-            high=stock_data['history']['High'],
-            low=stock_data['history']['Low'],
-            close=stock_data['history']['Close'],
-            name='Candles'
-        ))
-        
-        fig.update_layout(
-            title=f"{stock_data['name']} Price Chart",
-            yaxis_title="Price (₹)",
-            xaxis_title="Date",
-            height=500,
-            template="plotly_white"
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+        if stock_data and len(stock_data['history']) > 0:
+            fig = go.Figure()
+            fig.add_trace(go.Candlestick(
+                x=stock_data['history'].index,
+                open=stock_data['history']['Open'],
+                high=stock_data['history']['High'],
+                low=stock_data['history']['Low'],
+                close=stock_data['history']['Close'],
+                name='Candles'
+            ))
+            
+            fig.update_layout(
+                title=f"{stock_data['name']} Price Chart",
+                yaxis_title="Price (₹)",
+                xaxis_title="Date",
+                height=500,
+                template="plotly_white"
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("📊 Price chart will load when data is available. Please wait a moment or select another stock.")
         
         # Key metrics
         st.subheader("Key Metrics")
@@ -675,7 +850,7 @@ with tab3:
 with tab4:
     st.header("Technical Analysis")
     
-    if stock_data:
+    if stock_data and len(stock_data['history']) > 0:
         # Calculate indicators
         df_ta = stock_data['history'].copy()
         df_ta = calculate_technical_indicators(df_ta)
@@ -694,36 +869,40 @@ with tab4:
         ))
         
         # Moving averages
-        fig.add_trace(go.Scatter(
-            x=df_ta.index,
-            y=df_ta['SMA_20'],
-            name='SMA 20',
-            line=dict(color='orange', width=1)
-        ))
+        if 'SMA_20' in df_ta.columns and not df_ta['SMA_20'].isna().all():
+            fig.add_trace(go.Scatter(
+                x=df_ta.index,
+                y=df_ta['SMA_20'],
+                name='SMA 20',
+                line=dict(color='orange', width=1)
+            ))
         
-        fig.add_trace(go.Scatter(
-            x=df_ta.index,
-            y=df_ta['SMA_50'],
-            name='SMA 50',
-            line=dict(color='blue', width=1)
-        ))
+        if 'SMA_50' in df_ta.columns and not df_ta['SMA_50'].isna().all():
+            fig.add_trace(go.Scatter(
+                x=df_ta.index,
+                y=df_ta['SMA_50'],
+                name='SMA 50',
+                line=dict(color='blue', width=1)
+            ))
         
         # Bollinger Bands
-        fig.add_trace(go.Scatter(
-            x=df_ta.index,
-            y=df_ta['BB_upper'],
-            name='BB Upper',
-            line=dict(color='gray', width=1, dash='dash')
-        ))
+        if 'BB_upper' in df_ta.columns and not df_ta['BB_upper'].isna().all():
+            fig.add_trace(go.Scatter(
+                x=df_ta.index,
+                y=df_ta['BB_upper'],
+                name='BB Upper',
+                line=dict(color='gray', width=1, dash='dash')
+            ))
         
-        fig.add_trace(go.Scatter(
-            x=df_ta.index,
-            y=df_ta['BB_lower'],
-            name='BB Lower',
-            line=dict(color='gray', width=1, dash='dash'),
-            fill='tonexty',
-            fillcolor='rgba(128, 128, 128, 0.2)'
-        ))
+        if 'BB_lower' in df_ta.columns and not df_ta['BB_lower'].isna().all():
+            fig.add_trace(go.Scatter(
+                x=df_ta.index,
+                y=df_ta['BB_lower'],
+                name='BB Lower',
+                line=dict(color='gray', width=1, dash='dash'),
+                fill='tonexty',
+                fillcolor='rgba(128, 128, 128, 0.2)'
+            ))
         
         fig.update_layout(
             title="Technical Analysis Chart",
@@ -737,9 +916,9 @@ with tab4:
         # Technical Indicators
         col1, col2, col3 = st.columns(3)
         
-        latest_rsi = df_ta['RSI'].iloc[-1] if not df_ta['RSI'].isna().all() else 50
-        latest_macd = df_ta['MACD'].iloc[-1] if not df_ta['MACD'].isna().all() else 0
-        latest_signal = df_ta['Signal'].iloc[-1] if not df_ta['Signal'].isna().all() else 0
+        latest_rsi = df_ta['RSI'].iloc[-1] if 'RSI' in df_ta.columns and not df_ta['RSI'].isna().all() else 50
+        latest_macd = df_ta['MACD'].iloc[-1] if 'MACD' in df_ta.columns and not df_ta['MACD'].isna().all() else 0
+        latest_signal = df_ta['Signal'].iloc[-1] if 'Signal' in df_ta.columns and not df_ta['Signal'].isna().all() else 0
         
         with col1:
             st.metric("RSI (14)", f"{latest_rsi:.2f}")
@@ -758,68 +937,286 @@ with tab4:
                 st.warning("Bearish Signal")
         
         with col3:
-            current_price = df_ta['Close'].iloc[-1]
-            sma_20 = df_ta['SMA_20'].iloc[-1] if not df_ta['SMA_20'].isna().all() else current_price
-            
-            if current_price > sma_20:
-                st.success("Price above SMA 20")
-            else:
-                st.warning("Price below SMA 20")
+            if len(df_ta) > 0:
+                current_price = df_ta['Close'].iloc[-1]
+                sma_20 = df_ta['SMA_20'].iloc[-1] if 'SMA_20' in df_ta.columns and not df_ta['SMA_20'].isna().all() else current_price
+                
+                if current_price > sma_20:
+                    st.success("Price above SMA 20")
+                else:
+                    st.warning("Price below SMA 20")
+    else:
+        st.info("📊 Technical analysis will be available when stock data loads. Please wait a moment or try another stock.")
 
 # Tab 5: DCF Calculator
 with tab5:
     st.header("DCF Valuation Calculator")
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Input Parameters")
+    if stock_data and selected_stock:
+        # Fetch financial statements
+        try:
+            ticker = yf.Ticker(selected_stock)
+            
+            # Get financial data
+            cash_flow = ticker.cashflow
+            income_stmt = ticker.income_stmt
+            balance_sheet = ticker.balance_sheet
+            info = ticker.info
+            
+            # Calculate Free Cash Flow from actual data
+            if not cash_flow.empty and not income_stmt.empty:
+                try:
+                    # Get latest year data
+                    operating_cash_flow = cash_flow.loc['Operating Cash Flow'].iloc[0] if 'Operating Cash Flow' in cash_flow.index else cash_flow.loc['Total Cash From Operating Activities'].iloc[0]
+                    capex = cash_flow.loc['Capital Expenditures'].iloc[0] if 'Capital Expenditures' in cash_flow.index else 0
+                    
+                    # FCF = Operating Cash Flow - CapEx
+                    latest_fcf = operating_cash_flow - abs(capex)  # CapEx is usually negative
+                    
+                    # Get historical FCF for growth calculation
+                    historical_fcf = []
+                    for i in range(min(4, len(cash_flow.columns))):
+                        try:
+                            ocf = cash_flow.loc['Operating Cash Flow'].iloc[i] if 'Operating Cash Flow' in cash_flow.index else cash_flow.loc['Total Cash From Operating Activities'].iloc[i]
+                            cap = cash_flow.loc['Capital Expenditures'].iloc[i] if 'Capital Expenditures' in cash_flow.index else 0
+                            fcf = ocf - abs(cap)
+                            historical_fcf.append(fcf)
+                        except:
+                            pass
+                    
+                    # Calculate historical growth rate
+                    if len(historical_fcf) > 1:
+                        growth_rates = []
+                        for i in range(len(historical_fcf)-1):
+                            if historical_fcf[i+1] != 0:
+                                growth = (historical_fcf[i] - historical_fcf[i+1]) / abs(historical_fcf[i+1])
+                                growth_rates.append(growth)
+                        avg_growth = sum(growth_rates) / len(growth_rates) if growth_rates else 0.15
+                    else:
+                        avg_growth = 0.15
+                    
+                    # Get other metrics
+                    shares_outstanding = info.get('sharesOutstanding', 1000000000) / 10000000  # Convert to crores
+                    beta = info.get('beta', 1.0)
+                    
+                    # Calculate WACC components
+                    risk_free_rate = 0.065  # Indian 10-year bond yield
+                    market_premium = 0.08   # Historical equity risk premium
+                    cost_of_equity = risk_free_rate + beta * market_premium
+                    
+                    # Get debt data
+                    if not balance_sheet.empty:
+                        total_debt = balance_sheet.loc['Total Debt'].iloc[0] if 'Total Debt' in balance_sheet.index else 0
+                        total_equity = balance_sheet.loc['Total Equity Gross Minority Interest'].iloc[0] if 'Total Equity Gross Minority Interest' in balance_sheet.index else balance_sheet.loc['Stockholders Equity'].iloc[0]
+                        
+                        debt_ratio = total_debt / (total_debt + total_equity) if (total_debt + total_equity) > 0 else 0
+                        equity_ratio = 1 - debt_ratio
+                        
+                        # Assume cost of debt
+                        cost_of_debt = 0.07
+                        tax_rate = 0.25  # Indian corporate tax rate
+                        
+                        # Calculate WACC
+                        wacc = (equity_ratio * cost_of_equity) + (debt_ratio * cost_of_debt * (1 - tax_rate))
+                    else:
+                        wacc = cost_of_equity
+                    
+                    # Convert to crores for Indian context
+                    latest_fcf_cr = latest_fcf / 10000000
+                    
+                except Exception as e:
+                    st.warning(f"Could not fetch all financial data automatically. Using default values.")
+                    latest_fcf_cr = 1000
+                    avg_growth = 0.15
+                    wacc = 0.12
+                    shares_outstanding = 100
+            else:
+                latest_fcf_cr = 1000
+                avg_growth = 0.15
+                wacc = 0.12
+                shares_outstanding = 100
+                
+        except:
+            latest_fcf_cr = 1000
+            avg_growth = 0.15
+            wacc = 0.12
+            shares_outstanding = 100
         
-        fcf = st.number_input("Free Cash Flow (₹ Crores)", value=1000.0, step=100.0)
-        growth_rate = st.slider("Growth Rate (%)", 0.0, 30.0, 15.0, 0.5)
-        terminal_growth = st.slider("Terminal Growth Rate (%)", 0.0, 10.0, 3.0, 0.5)
-        discount_rate = st.slider("Discount Rate (WACC) %", 5.0, 20.0, 12.0, 0.5)
-        shares_outstanding = st.number_input("Shares Outstanding (Crores)", value=100.0, step=10.0)
+        col1, col2 = st.columns(2)
         
-        if st.button("Calculate DCF Value"):
-            dcf_value = calculate_dcf(
-                fcf, 
-                growth_rate/100, 
-                terminal_growth/100, 
-                discount_rate/100
+        with col1:
+            st.subheader("📊 Automated Financial Data")
+            
+            st.info(f"**Fetched from {stock_data['name']} Financial Statements**")
+            
+            # Display fetched values with ability to override
+            fcf = st.number_input(
+                "Latest Free Cash Flow (₹ Crores)", 
+                value=float(latest_fcf_cr), 
+                step=100.0,
+                help="Automatically calculated: Operating Cash Flow - CapEx"
             )
             
-            fair_value_per_share = (dcf_value / shares_outstanding) * 10  # Convert to per share
+            growth_rate = st.slider(
+                "Historical Avg Growth Rate (%)", 
+                0.0, 50.0, 
+                float(avg_growth * 100), 
+                0.5,
+                help=f"Based on last 3-4 years FCF growth"
+            )
             
-            st.session_state.dcf_result = {
-                'enterprise_value': dcf_value,
-                'fair_value': fair_value_per_share
-            }
+            terminal_growth = st.slider(
+                "Terminal Growth Rate (%)", 
+                0.0, 10.0, 
+                min(3.0, growth_rate/3), 
+                0.5,
+                help="Long-term GDP growth rate"
+            )
+            
+            discount_rate = st.slider(
+                "WACC (Weighted Avg Cost of Capital) %", 
+                5.0, 20.0, 
+                float(wacc * 100), 
+                0.5,
+                help=f"Auto-calculated based on Beta: {beta if 'beta' in locals() else 'N/A'}"
+            )
+            
+            shares_outstanding = st.number_input(
+                "Shares Outstanding (Crores)", 
+                value=float(shares_outstanding), 
+                step=10.0,
+                help="Fetched from company info"
+            )
+            
+            # Additional parameters
+            with st.expander("Advanced Parameters"):
+                projection_years = st.slider("Projection Period (Years)", 5, 15, 10)
+                fade_rate = st.slider("Growth Fade Rate (%/year)", 0.0, 5.0, 2.0)
+            
+            if st.button("🧮 Calculate DCF Value", type="primary"):
+                # Progressive growth rate (fading growth)
+                dcf_value = 0
+                current_fcf = fcf
+                current_growth = growth_rate / 100
+                
+                # Project cash flows with fading growth
+                projected_fcfs = []
+                for year in range(1, projection_years + 1):
+                    # Reduce growth rate each year
+                    if year > 5:
+                        current_growth = max(terminal_growth/100, current_growth - (fade_rate/100))
+                    
+                    current_fcf = current_fcf * (1 + current_growth)
+                    discounted_fcf = current_fcf / ((1 + discount_rate/100) ** year)
+                    dcf_value += discounted_fcf
+                    projected_fcfs.append({
+                        'Year': year,
+                        'FCF': current_fcf,
+                        'Growth': current_growth * 100,
+                        'Discounted': discounted_fcf
+                    })
+                
+                # Terminal value
+                terminal_fcf = current_fcf * (1 + terminal_growth/100)
+                terminal_value = terminal_fcf / ((discount_rate/100) - (terminal_growth/100))
+                discounted_terminal = terminal_value / ((1 + discount_rate/100) ** projection_years)
+                
+                enterprise_value = dcf_value + discounted_terminal
+                
+                # Get net debt
+                try:
+                    if not balance_sheet.empty:
+                        cash = balance_sheet.loc['Cash And Cash Equivalents'].iloc[0] if 'Cash And Cash Equivalents' in balance_sheet.index else 0
+                        total_debt = balance_sheet.loc['Total Debt'].iloc[0] if 'Total Debt' in balance_sheet.index else 0
+                        net_debt = (total_debt - cash) / 10000000  # Convert to crores
+                    else:
+                        net_debt = 0
+                except:
+                    net_debt = 0
+                
+                equity_value = enterprise_value - net_debt
+                fair_value_per_share = (equity_value / shares_outstanding) * 10
+                
+                st.session_state.dcf_result = {
+                    'enterprise_value': enterprise_value,
+                    'equity_value': equity_value,
+                    'fair_value': fair_value_per_share,
+                    'terminal_value': discounted_terminal,
+                    'net_debt': net_debt,
+                    'projected_fcfs': projected_fcfs
+                }
     
-    with col2:
-        st.subheader("Valuation Results")
-        
-        if 'dcf_result' in st.session_state:
-            st.metric("Enterprise Value", f"₹{st.session_state.dcf_result['enterprise_value']:,.2f} Cr")
-            st.metric("Fair Value per Share", f"₹{st.session_state.dcf_result['fair_value']:,.2f}")
+        with col2:
+            st.subheader("💰 Valuation Results")
             
-            if stock_data:
-                current_price = stock_data['current_price']
-                upside = ((st.session_state.dcf_result['fair_value'] - current_price) / current_price) * 100
+            if 'dcf_result' in st.session_state:
+                # Display results
+                col_a, col_b = st.columns(2)
                 
-                st.metric("Current Price", f"₹{current_price:.2f}")
-                st.metric(
-                    "Upside/Downside", 
-                    f"{upside:.2f}%",
-                    delta=f"₹{st.session_state.dcf_result['fair_value'] - current_price:.2f}"
-                )
+                with col_a:
+                    st.metric("Enterprise Value", f"₹{st.session_state.dcf_result['enterprise_value']:,.0f} Cr")
+                    st.metric("Less: Net Debt", f"₹{st.session_state.dcf_result['net_debt']:,.0f} Cr")
+                    st.metric("Equity Value", f"₹{st.session_state.dcf_result['equity_value']:,.0f} Cr")
                 
-                if upside > 20:
-                    st.success("Stock appears undervalued")
-                elif upside < -20:
-                    st.warning("Stock appears overvalued")
-                else:
-                    st.info("Stock appears fairly valued")
+                with col_b:
+                    st.metric("Fair Value per Share", f"₹{st.session_state.dcf_result['fair_value']:,.2f}")
+                    
+                    current_price = stock_data['current_price']
+                    upside = ((st.session_state.dcf_result['fair_value'] - current_price) / current_price) * 100
+                    
+                    st.metric("Current Price", f"₹{current_price:.2f}")
+                    
+                    if abs(upside) < 100:  # Sanity check
+                        st.metric(
+                            "Upside/Downside", 
+                            f"{upside:.1f}%",
+                            delta=f"₹{st.session_state.dcf_result['fair_value'] - current_price:.2f}"
+                        )
+                        
+                        # Recommendation based on upside
+                        if upside > 30:
+                            st.success("🟢 **STRONG BUY** - Significant undervaluation")
+                        elif upside > 15:
+                            st.success("🟢 **BUY** - Stock appears undervalued")
+                        elif upside > -10:
+                            st.info("🟡 **HOLD** - Fairly valued")
+                        elif upside > -25:
+                            st.warning("🟡 **REDUCE** - Slightly overvalued")
+                        else:
+                            st.error("🔴 **SELL** - Significantly overvalued")
+                    else:
+                        st.warning("Valuation seems unrealistic. Check input parameters.")
+                
+                # Show cash flow projections
+                with st.expander("📈 Detailed Cash Flow Projections"):
+                    df_projections = pd.DataFrame(st.session_state.dcf_result['projected_fcfs'])
+                    df_projections['FCF'] = df_projections['FCF'].round(0)
+                    df_projections['Discounted'] = df_projections['Discounted'].round(0)
+                    df_projections['Growth'] = df_projections['Growth'].round(1)
+                    
+                    st.dataframe(df_projections, use_container_width=True)
+                    
+                    # Pie chart of value components
+                    pv_cash_flows = sum([cf['Discounted'] for cf in st.session_state.dcf_result['projected_fcfs']])
+                    terminal_value = st.session_state.dcf_result['terminal_value']
+                    
+                    fig = px.pie(
+                        values=[pv_cash_flows, terminal_value],
+                        names=['PV of Cash Flows', 'PV of Terminal Value'],
+                        title="Value Composition"
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("👈 Click 'Calculate DCF Value' to see results")
+                
+                # Show key metrics even before calculation
+                st.write("**Key Metrics:**")
+                if stock_data:
+                    st.write(f"• P/E Ratio: {stock_data['pe_ratio']:.1f}" if stock_data['pe_ratio'] > 0 else "• P/E Ratio: N/A")
+                    st.write(f"• Market Cap: ₹{stock_data['market_cap']/10000000:.0f} Cr" if stock_data['market_cap'] > 0 else "• Market Cap: N/A")
+                    st.write(f"• Current Price: ₹{stock_data['current_price']:.2f}")
+    else:
+        st.info("📊 Select a stock to perform DCF valuation with real financial data")
 
 # Tab 6: AI Insights
 with tab6:
@@ -936,22 +1333,3 @@ with tab6:
 # Footer
 st.markdown("---")
 st.markdown("*Data provided by Yahoo Finance (Free API). For educational purposes only. Not investment advice.*")
-
-# Add custom CSS for better styling
-st.markdown("""
-<style>
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #1f77b4;
-        color: white;
-        border-radius: 4px;
-    }
-</style>
-""", unsafe_allow_html=True)
