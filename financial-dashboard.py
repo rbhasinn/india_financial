@@ -1,4 +1,14 @@
 #!/usr/bin/env python3
+"""
+Ultimate Professional Indian Financial Dashboard
+Advanced trading platform with comprehensive analytics
+
+Requirements:
+pip install streamlit yfinance pandas numpy plotly
+
+Run with:
+streamlit run financial-dashboard.py
+"""
 
 import streamlit as st
 
@@ -20,7 +30,6 @@ from datetime import datetime, timedelta
 import sqlite3
 import hashlib
 import time
-from scipy import stats
 import warnings
 warnings.filterwarnings('ignore')
 
